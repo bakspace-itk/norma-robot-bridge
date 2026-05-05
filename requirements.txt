@@ -1,0 +1,10 @@
+# Runtime-deps for norma-robot-bridge (Python 2.7).
+#
+# NAOqi SDK leveres ikke via pip - installeres separat paa den maskine der har
+# adgang til Pepper/NAO. Verificer med:
+#   python2 -c "from naoqi import ALProxy; print('OK')"
+
+# Test-deps
+pytest<5.0
+mock<4.0
+PyYAML<6.0  # bruges af tests/test_openapi_consistency.py

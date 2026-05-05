@@ -1,0 +1,509 @@
+openapi: 3.0.3
+
+info:
+  title: Norma Robot Bridge API
+  version: 0.1.0
+  description: |
+    HTTP-bridge der eksponerer NAOqi-funktionalitet (TTS, animationer, tablet)
+    for Pepper/NAO via et JSON-API.
+
+    Skrevet i Python 2.7 fordi NAOqi-SDK'et kræver det.
+
+    ## Routing
+    - `GET /api/status` — server- og robot-status
+    - `POST /api/command` — udfør en kommando (felt `command` afgør hvilken)
+
+    Bridge er **uversioneret** — hvis breaking changes en dag bliver
+    nødvendige, indfører vi `/api/v2/...` parallelt med de uversionerede
+    endpoints.
+
+    ## Status-koder
+    - `200` — succes
+    - `400` — klient-fejl (manglende/ugyldigt parameter, ukendt kommando,
+              ugyldig JSON, klient-angivet fil findes ikke)
+    - `404` — ukendt path
+    - `500` — intern fejl (NAOqi-fejl, intern bug)
+
+    ## Kontrakt-tests
+    Specifikationen er holdt i synk med kontrakttests i
+    `tests/test_handlers.py` og `tests/test_commands.py`. Hvis denne
+    yaml-fil og den eksekverbare adfærd er uenige — antag at testene har ret
+    og opdater spec'en.
+
+  license:
+    name: Internt projekt
+
+servers:
+  - url: http://{host}:{port}
+    description: Bridge-instans
+    variables:
+      host:
+        default: localhost
+        description: Bridge-værtsmaskine (typisk ved robotten)
+      port:
+        default: "8080"
+        description: TCP-port
+
+paths:
+
+  /api/status:
+    get:
+      summary: Server- og robot-status
+      description: |
+        Returnerer det samme som `POST /api/command` med `{"command":"get_status"}`.
+      operationId: getStatus
+      responses:
+        '200':
+          description: Status returneret
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusSuccessEnvelope'
+              example:
+                status: success
+                data:
+                  ip: 192.168.1.156
+                  port: 9559
+                  interaction_count: 3
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/command:
+    post:
+      summary: Udfør en robot-kommando
+      description: |
+        Kommandoen vælges via `command`-feltet i request-body'en. Hver kommando
+        har sit eget `params`-skema; se `Command`-skemaets oneOf nedenfor.
+
+        Successresponses pakker kommando-specifik data ind i `{status, data}`.
+        Fejl pakker en fejlbesked i `{status, message}`.
+      operationId: postCommand
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Command'
+            examples:
+              say:
+                summary: TTS med valgfri gesture
+                value:
+                  command: say
+                  params:
+                    text: Hej Norma
+                    gesture: hello
+              play_gesture:
+                summary: Afspil named gesture
+                value:
+                  command: play_gesture
+                  params:
+                    gesture_name: bow
+              show_tablet_url:
+                summary: Peg tablet på en URL (foretrukken metode)
+                value:
+                  command: show_tablet_url
+                  params:
+                    url: http://norma-ui.local:8000/dialog
+              show_tablet_image:
+                summary: Vis lokalt billede (legacy data-URI)
+                value:
+                  command: show_tablet_image
+                  params:
+                    image_path: C:\assets\intro.png
+              show_tablet_html:
+                summary: Vis HTML-streng (legacy data-URI)
+                value:
+                  command: show_tablet_html
+                  params:
+                    html: <h1>Hej Norma</h1>
+              hide_tablet:
+                summary: Skjul webview
+                value:
+                  command: hide_tablet
+                  params: {}
+              get_status:
+                summary: Hent status
+                value:
+                  command: get_status
+                  params: {}
+      responses:
+        '200':
+          description: Kommando udført
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandSuccessEnvelope'
+              examples:
+                say:
+                  value:
+                    status: success
+                    data:
+                      spoken_text: Hej Norma
+                      gesture: hello
+                      interaction_count: 1
+                play_gesture:
+                  value:
+                    status: success
+                    data:
+                      played: bow
+                show_tablet_url:
+                  value:
+                    status: success
+                    data:
+                      shown_url: http://norma-ui.local:8000/dialog
+                show_tablet_image:
+                  value:
+                    status: success
+                    data:
+                      shown_image: C:\assets\intro.png
+                show_tablet_html:
+                  value:
+                    status: success
+                    data:
+                      html_length: 25
+                hide_tablet:
+                  value:
+                    status: success
+                    data:
+                      hidden: true
+                get_status:
+                  value:
+                    status: success
+                    data:
+                      ip: 192.168.1.156
+                      port: 9559
+                      interaction_count: 3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+
+  responses:
+
+    BadRequest:
+      description: |
+        Klient-fejl. Eksempler:
+        - `command mangler` — body uden `command`-felt
+        - `Ukendt kommando: <navn>` — kommandoen er ikke registreret
+        - `params.text mangler` — påkrævet parameter mangler
+        - `Ugyldig JSON: <detaljer>` — body kan ikke parses
+        - `Body skal vaere et JSON-objekt` — body er fx en liste
+        - `Billedfil ikke fundet: <sti>` — `show_tablet_image` med ugyldig sti
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          examples:
+            unknown_command:
+              value:
+                status: error
+                message: 'Ukendt kommando: banan'
+            missing_param:
+              value:
+                status: error
+                message: params.text mangler
+            invalid_json:
+              value:
+                status: error
+                message: 'Ugyldig JSON: Expecting value: line 1 column 1 (char 0)'
+            image_missing:
+              value:
+                status: error
+                message: 'Billedfil ikke fundet: /findes/ikke.png'
+
+    InternalError:
+      description: |
+        NAOqi-fejl, intern bug, eller anden uventet exception.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            status: error
+            message: connection refused
+
+  schemas:
+
+    # ---------- Envelopes ----------
+
+    ErrorEnvelope:
+      type: object
+      required: [status, message]
+      properties:
+        status:
+          type: string
+          enum: [error]
+        message:
+          type: string
+          description: Kort beskrivelse af fejlen. Beregnet til logging og udvikler-debug.
+
+    CommandSuccessEnvelope:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          description: |
+            Kommando-specifik response-data. Skemaet afhænger af hvilken
+            `command` der blev sendt:
+            - `say` → `SayResponseData`
+            - `play_gesture` → `PlayGestureResponseData`
+            - `show_tablet_image` → `ShowTabletImageResponseData`
+            - `show_tablet_html` → `ShowTabletHtmlResponseData`
+            - `show_tablet_url` → `ShowTabletUrlResponseData`
+            - `hide_tablet` → `HideTabletResponseData`
+            - `get_status` → `StatusData`
+          oneOf:
+            - $ref: '#/components/schemas/SayResponseData'
+            - $ref: '#/components/schemas/PlayGestureResponseData'
+            - $ref: '#/components/schemas/ShowTabletImageResponseData'
+            - $ref: '#/components/schemas/ShowTabletHtmlResponseData'
+            - $ref: '#/components/schemas/ShowTabletUrlResponseData'
+            - $ref: '#/components/schemas/HideTabletResponseData'
+            - $ref: '#/components/schemas/StatusData'
+
+    StatusSuccessEnvelope:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          $ref: '#/components/schemas/StatusData'
+
+    # ---------- Discriminated request union ----------
+
+    Command:
+      description: |
+        Et enkelt JSON-objekt med `command`-feltet som diskriminator.
+        Body'en skal indeholde et `params`-objekt; for kommandoer uden
+        parametre kan det være tomt (`{}`) eller helt udeladt.
+      oneOf:
+        - $ref: '#/components/schemas/SayCommand'
+        - $ref: '#/components/schemas/PlayGestureCommand'
+        - $ref: '#/components/schemas/ShowTabletImageCommand'
+        - $ref: '#/components/schemas/ShowTabletHtmlCommand'
+        - $ref: '#/components/schemas/ShowTabletUrlCommand'
+        - $ref: '#/components/schemas/HideTabletCommand'
+        - $ref: '#/components/schemas/GetStatusCommand'
+      discriminator:
+        propertyName: command
+        mapping:
+          say: '#/components/schemas/SayCommand'
+          play_gesture: '#/components/schemas/PlayGestureCommand'
+          show_tablet_image: '#/components/schemas/ShowTabletImageCommand'
+          show_tablet_html: '#/components/schemas/ShowTabletHtmlCommand'
+          show_tablet_url: '#/components/schemas/ShowTabletUrlCommand'
+          hide_tablet: '#/components/schemas/HideTabletCommand'
+          get_status: '#/components/schemas/GetStatusCommand'
+
+    # ---------- Per-command request schemas ----------
+
+    SayCommand:
+      type: object
+      required: [command, params]
+      properties:
+        command:
+          type: string
+          enum: [say]
+        params:
+          type: object
+          required: [text]
+          properties:
+            text:
+              type: string
+              description: Sætningen Norma skal sige (UTF-8). Tom streng er gyldig.
+              example: Hej Norma
+            gesture:
+              type: string
+              nullable: true
+              description: |
+                Valgfrit gesture-tag der ledsager talen. Hvis udeladt eller `null`
+                bruges cycling-logikken: hver anden interaktion får en
+                gesture fra den konfigurerede liste.
+              example: hello
+
+    PlayGestureCommand:
+      type: object
+      required: [command, params]
+      properties:
+        command:
+          type: string
+          enum: [play_gesture]
+        params:
+          type: object
+          description: |
+            Mindst ét af `gesture_name` (kanonisk) eller `gesture` (legacy alias)
+            skal være sat.
+          properties:
+            gesture_name:
+              type: string
+              description: Kanonisk parameter-navn.
+              example: bow
+            gesture:
+              type: string
+              description: Legacy alias for `gesture_name`. Bevares for bagudkompatibilitet.
+
+    ShowTabletImageCommand:
+      type: object
+      required: [command, params]
+      properties:
+        command:
+          type: string
+          enum: [show_tablet_image]
+        params:
+          type: object
+          required: [image_path]
+          properties:
+            image_path:
+              type: string
+              description: |
+                Absolut sti på *bridge-maskinen* til en PNG/JPG. Filen skal
+                eksistere — bridge returnerer 400 hvis ikke.
+              example: C:\assets\intro.png
+
+    ShowTabletHtmlCommand:
+      type: object
+      required: [command, params]
+      properties:
+        command:
+          type: string
+          enum: [show_tablet_html]
+        params:
+          type: object
+          description: |
+            Mindst ét af `html` (kanonisk) eller `html_content` (legacy alias)
+            skal være sat. Tom streng er gyldig (resulterer i tom side).
+          properties:
+            html:
+              type: string
+              description: HTML-streng der vises på tabletten.
+              example: <h1>Hej Norma</h1>
+            html_content:
+              type: string
+              description: Legacy alias for `html`.
+
+    ShowTabletUrlCommand:
+      type: object
+      required: [command, params]
+      properties:
+        command:
+          type: string
+          enum: [show_tablet_url]
+        params:
+          type: object
+          required: [url]
+          properties:
+            url:
+              type: string
+              format: uri
+              description: |
+                URL som tabletten åbner i sin WebView. Foretrukken metode i
+                den nye arkitektur — peges typisk på en `norma-ui`-side.
+              example: http://norma-ui.local:8000/dialog
+
+    HideTabletCommand:
+      type: object
+      required: [command]
+      properties:
+        command:
+          type: string
+          enum: [hide_tablet]
+        params:
+          type: object
+          description: Tomt objekt eller udeladt.
+          additionalProperties: true
+
+    GetStatusCommand:
+      type: object
+      required: [command]
+      properties:
+        command:
+          type: string
+          enum: [get_status]
+        params:
+          type: object
+          description: Tomt objekt eller udeladt.
+          additionalProperties: true
+
+    # ---------- Response data schemas ----------
+
+    SayResponseData:
+      type: object
+      required: [spoken_text, gesture, interaction_count]
+      properties:
+        spoken_text:
+          type: string
+          description: Den faktisk udtalte tekst (efter unicode-normalisering).
+        gesture:
+          type: string
+          nullable: true
+          description: Den udvalgte gesture (eksplicit eller fra cycling), eller `null`.
+        interaction_count:
+          type: integer
+          minimum: 1
+          description: Tæller bumpes med 1 pr. `say`-kald. Nulstilles ved restart.
+
+    PlayGestureResponseData:
+      type: object
+      required: [played]
+      properties:
+        played:
+          type: string
+          description: Det gesture-tag der blev sendt til `ALAnimationPlayer.runTag()`.
+
+    ShowTabletImageResponseData:
+      type: object
+      required: [shown_image]
+      properties:
+        shown_image:
+          type: string
+          description: Absolut sti til billedet der blev vist.
+
+    ShowTabletHtmlResponseData:
+      type: object
+      required: [html_length]
+      properties:
+        html_length:
+          type: integer
+          minimum: 0
+          description: Længde i UTF-8-bytes af den HTML der blev vist.
+
+    ShowTabletUrlResponseData:
+      type: object
+      required: [shown_url]
+      properties:
+        shown_url:
+          type: string
+          format: uri
+          description: URL'en som tablet-WebView blev peget på.
+
+    HideTabletResponseData:
+      type: object
+      required: [hidden]
+      properties:
+        hidden:
+          type: boolean
+          enum: [true]
+
+    StatusData:
+      type: object
+      required: [ip, port, interaction_count]
+      properties:
+        ip:
+          type: string
+          description: Robotens IP-adresse som bridge'en er forbundet til.
+          example: 192.168.1.156
+        port:
+          type: integer
+          description: NAOqi-port.
+          example: 9559
+        interaction_count:
+          type: integer
+          minimum: 0
+          description: Antal `say`-kald siden bridge sidst startede.
