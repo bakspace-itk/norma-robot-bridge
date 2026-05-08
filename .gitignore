@@ -28,3 +28,8 @@ Thumbs.db
 
 # Local config overrides
 config/local.ini
+
+# Per-maskine aktiverings-helper genereret af scripts/setup-*.sh|bat
+# Indeholder absolutte stier til den lokale NAOqi-SDK-installation.
+activate-with-naoqi.sh
+activate-with-naoqi.bat
