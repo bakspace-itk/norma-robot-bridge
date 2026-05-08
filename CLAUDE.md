@@ -21,13 +21,13 @@ NAOqi-SDK'et kører kun på Python 2.7. Det er den eneste grund til at vi holder
 from __future__ import print_function, unicode_literals
 ```
 
-**Verificér før commit:**
+**Verificér før commit** (med miljøet aktiveret via `activate-with-naoqi.{sh,bat}` eller plain venv):
 ```bash
-./.venv27/Scripts/python.exe -m py_compile src/norma_bridge/**/*.py
-./.venv27/Scripts/python.exe -m pytest tests/
+python -m py_compile src/norma_bridge/**/*.py
+pytest tests/
 ```
 
-**NAOqi-bundlet Python 2.7-faldgrube:** SDK'ets `python2.exe` (typisk på `C:\tools\python27-nao\bin\`) har en usædvanlig mappe-struktur og kan ikke finde sit `site`-modul uden hjælp. Brug `PYTHONHOME` **inline pr. kommando** når du opretter eller bootstrapper venv'en — aldrig `export`/`$env:`. Når venv'en først er på plads, har den sit eget `pyvenv.cfg` og virker uden tricks. Detaljer i `README.md`. Brug aldrig `export PYTHONHOME=...` — det vil bryde Python 3 i samme shell-session.
+**NAOqi-bundlet Python 2.7:** SDK'ets `python2.exe` har et usædvanligt layout der kræver `PYTHONHOME` inline ved venv-oprettelsen. `scripts/setup-windows.bat` håndterer det via et tredje positionsargument — kør aldrig `export PYTHONHOME=...` / `$env:PYTHONHOME=...` uden for den scope, det vil bryde Python 3 i samme shell-session. Detaljer i `scripts/README.md`.
 
 ## Mappestruktur (nuværende)
 

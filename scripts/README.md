@@ -18,17 +18,27 @@ Scripts'ene er idempotente — kør dem så mange gange du vil. De ødelægger i
 ### 1. Installer Python 2.7
 
 **Linux:**
+Denne fremgangsmåde er teste på en frisk Linux Mint. Vi skal bruge både 2.7 og 3+, så pyenv er at foretrække.
 ```bash
-# Ubuntu 20.04 (Py 2.7 i repos)
-sudo apt update
-sudo apt install -y python2.7 python2.7-dev
-sudo ln -sf /usr/bin/python2.7 /usr/local/bin/python2
+sudo apt install build-essential libssl-dev zlib1g-dev \
+libbz2-dev libreadline-dev libsqlite3-dev curl \
+libncurses5-dev libncursesw5-dev xz-utils tk-dev \
+libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+```
 
-# Ubuntu 22.04+ (deadsnakes)
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt update
-sudo apt install -y python2.7 python2.7-dev
-sudo ln -sf /usr/bin/python2.7 /usr/local/bin/python2
+```bash
+curl https://pyenv.run | bash
+# Kopier dette ind i din .bashrc, ligesom pyenv beskriver
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+```
+
+```bash
+pyenv install 2.7.18
+pyenv install 3.12.3
+pyenv rehash
 ```
 
 **Windows:**
@@ -60,6 +70,8 @@ set PYTHONHOME=
 ```
 
 ### 3. Download og udpak NAOqi pynaoqi-SDK
+
+https://maxtronics.com/en/software-development-kit/
 
 Hent fra Aldebaran/Softbank Developer Portal (kræver login). Eksempel-filnavn: `pynaoqi-python2.7-2.5.5.5-linux64.tar.gz` eller `-win64-vs2013.zip`.
 

@@ -20,53 +20,44 @@ Refaktorering færdig: monolitten fra `src/norma_bridge/_legacy.py` er erstattet
 
 ## Installation
 
-### Standard-tilfælde (almindelig Python 2.7-installation)
-
-```powershell
-py -2 -m virtualenv .venv27
-.\.venv27\Scripts\Activate.ps1
-pip install -e ".[test]"
-```
-
-### NAOqi-bundlet Python 2.7 (fx `C:\tools\python27-nao\`)
-
-NAOqi-SDK'ets bundlede Python 2.7 har en usædvanlig mappe-struktur (binær i `bin/`, stdlib i `lib/python2.7/Lib/`) der gør at Python ikke kan finde sit `site`-modul uden hjælp. Sæt `PYTHONHOME` **inline pr. kommando** så det ikke lækker til andre Python-installationer:
+Brug setup-scripts'ne i [scripts/](scripts/) — de opretter `.venv27/`, installerer pakken med `pip install -e ".[test]"` og genererer en `activate-with-naoqi.{sh,bat}`-helper der sætter både venv og pynaoqi-`PYTHONPATH`. Se [scripts/README.md](scripts/README.md) for forudsætninger (Python 2.7, pip, NAOqi-SDK) og platform-specifikke kald.
 
 ```bash
-# Bash — inline (PÅVIRKER IKKE shell-sessionen)
-PY2HOME="C:\\tools\\python27-nao\\lib\\python2.7"
-PYTHONHOME="$PY2HOME" python2 -m virtualenv .venv27
+# Linux
+./scripts/setup-linux.sh --naoqi-sdk /opt/aldebaran/pynaoqi-python2.7-2.5.5.5-linux64
+
+# Windows cmd
+scripts\setup-windows.bat C:\tools\pynaoqi
 ```
 
-```powershell
-# PowerShell — inline (PÅVIRKER IKKE shell-sessionen)
-$env:PYTHONHOME="C:\tools\python27-nao\lib\python2.7"
-& "C:\tools\python27-nao\bin\python2.exe" -m virtualenv .venv27
-Remove-Item Env:PYTHONHOME    # ryd op straks bagefter
-```
-
-Når venv'en først er oprettet, har den sit eget `pyvenv.cfg` og virker uden `PYTHONHOME` — alle senere kald til `.venv27/Scripts/python.exe` er rene.
-
-```bash
-./.venv27/Scripts/python.exe -m pip install -e ".[test]"
-```
-
-> ⚠️ Brug **aldrig** `export PYTHONHOME=...` — det vil bryde Python 3 i samme shell-session.
+NAOqi-SDK'ets bundlede Python 2.7 har et usædvanligt layout der kræver `PYTHONHOME` inline ved venv-oprettelsen — `setup-windows.bat` håndterer det automatisk via et tredje positionsargument. Detaljer i [scripts/README.md](scripts/README.md).
 
 ## Kør
 
+Aktivér først miljøet (helperen oprettes af setup-scriptet):
+
 ```bash
-# Mod ægte robot (kræver config-fil med din robots IP)
-PYTHONPATH=src ./.venv27/Scripts/python.exe -m norma_bridge.main --config config/local.ini
+# Linux
+source ./activate-with-naoqi.sh
 
-# Lokal udvikling med FakeRobotService (ingen NAOqi påkrævet)
-PYTHONPATH=src ./.venv27/Scripts/python.exe -m norma_bridge.main --fake --port 8080
-
-# Spring intro over (hurtig genstart under udvikling)
-PYTHONPATH=src ./.venv27/Scripts/python.exe -m norma_bridge.main --fake --no-intro
+# Windows cmd
+activate-with-naoqi.bat
 ```
 
-`PYTHONPATH=src` er nødvendigt indtil pakken er installeret med `pip install -e .` — så er det automatisk på path.
+Så:
+
+```bash
+# Mod ægte robot (kræver config-fil med din robots IP)
+python -m norma_bridge.main --config config/local.ini
+
+# Lokal udvikling med FakeRobotService (ingen NAOqi påkrævet)
+python -m norma_bridge.main --fake --port 8080
+
+# Spring intro over (hurtig genstart under udvikling)
+python -m norma_bridge.main --fake --no-intro
+```
+
+For ren fake-mode (uden NAOqi-import) er plain venv-aktivering nok — `source .venv27/bin/activate` på Linux, `.\.venv27\Scripts\Activate.ps1` i PowerShell. Det er det `scripts/dev-up.{ps1,sh}` bruger.
 
 CLI-args overstyrer config-fil overstyrer ENV-vars overstyrer kodede defaults. Se `python -m norma_bridge.main --help` for komplet liste.
 
@@ -190,8 +181,10 @@ For lokal udvikling: kopiér `config/default.ini` til `config/local.ini` og redi
 
 ## Test
 
+Med miljøet aktiveret:
+
 ```bash
-./.venv27/Scripts/python.exe -m pytest tests/
+pytest tests/
 ```
 
 164 tests, ingen NAOqi påkrævet — alle bruger `FakeRobotService` eller mockede ALProxies. Kører rent på både Python 2.7 og Python 3.12.
