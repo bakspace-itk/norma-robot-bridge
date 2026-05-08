@@ -41,6 +41,13 @@ pyenv install 3.12.3
 pyenv rehash
 ```
 
+```bash
+# Her sikrer vi, at den python 2.7 vi har installeret peger på naoqi-pakken
+python -c "import site; print(site.getsitepackages()[0])"
+# den følgende linie er et link til naoqi-pakken, en naoqi.py-fil, som ligger et sted i din pynaoqi installation
+echo "/home/DIT_NAVN/pynaoqi-python2.7-linux64/lib/python2.7/site-packages/" > /stien/fra/før/naoqi.pth
+```
+
 **Windows:**
 - Standard: download [Python 2.7.18 Windows x86-64 MSI](https://www.python.org/ftp/python/2.7.18/python-2.7.18.amd64.msi)
 - Eller brug NAOqi-SDK'ets bundlede `python2.exe` (typisk `C:\tools\python27-nao\bin\python2.exe`)
@@ -92,6 +99,7 @@ ls /opt/aldebaran/pynaoqi-python2.7-2.5.5.5-linux64/lib/python2.7/site-packages/
 
 ## Kør scriptet
 
+Sørg for, at du har tilladelse til at køre scriptet med 'chmod +x setup-linux.sh'. Du skal ALDRIG køre python2.7 med sudo.
 ### Linux bash
 
 ```bash
