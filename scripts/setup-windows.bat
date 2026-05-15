@@ -32,14 +32,21 @@ set PYTHONHOME_INLINE=%~3
 
 if "%PYTHON2_EXE%"=="" set PYTHON2_EXE=python
 
-REM ---------- validering ----------
-if not exist "%NAOQI_SDK%\lib\python2.7\site-packages\naoqi.py" (
-    echo FEJL: naoqi.py ikke fundet i:
-    echo        %NAOQI_SDK%\lib\python2.7\site-packages
-    echo        Tjek at foerste argument peger paa SDK-roden, ikke en undermappe.
+REM ---------- validering / detect layout ----------
+REM Stoetter to layouts:
+REM   1. Standalone pynaoqi-SDK:    ^<sdk^>\lib\python2.7\site-packages\naoqi.py
+REM   2. NAOqi-bundlet runtime:     ^<sdk^>\lib\naoqi.py  (SDK og Python i samme mappe)
+if exist "%NAOQI_SDK%\lib\python2.7\site-packages\naoqi.py" (
+    set NAOQI_SITE=%NAOQI_SDK%\lib\python2.7\site-packages
+) else if exist "%NAOQI_SDK%\lib\naoqi.py" (
+    set NAOQI_SITE=%NAOQI_SDK%\lib
+) else (
+    echo FEJL: naoqi.py ikke fundet i hverken:
+    echo        %NAOQI_SDK%\lib\python2.7\site-packages\naoqi.py   ^(pynaoqi-SDK^)
+    echo        %NAOQI_SDK%\lib\naoqi.py                           ^(NAOqi-bundlet runtime^)
+    echo        Tjek at foerste argument peger paa SDK-roden eller den bundlede runtime-mappe.
     exit /b 1
 )
-set NAOQI_SITE=%NAOQI_SDK%\lib\python2.7\site-packages
 
 REM Find bridge-roden (script lever i scripts\ under bridge-roden)
 set BRIDGE_DIR=%~dp0..

@@ -71,10 +71,18 @@ if [[ ! -d "$NAOQI_SDK" ]]; then
     exit 1
 fi
 
-NAOQI_SITE="$NAOQI_SDK/lib/python2.7/site-packages"
-if [[ ! -f "$NAOQI_SITE/naoqi.py" ]]; then
-    echo "FEJL: naoqi.py ikke fundet i $NAOQI_SITE" >&2
-    echo "       Tjek at --naoqi-sdk peger paa SDK-roden, ikke en undermappe." >&2
+# Stoetter to layouts:
+#   1. Standalone pynaoqi-SDK:    <sdk>/lib/python2.7/site-packages/naoqi.py
+#   2. NAOqi-bundlet runtime:     <sdk>/lib/naoqi.py  (SDK og Python i samme mappe)
+if [[ -f "$NAOQI_SDK/lib/python2.7/site-packages/naoqi.py" ]]; then
+    NAOQI_SITE="$NAOQI_SDK/lib/python2.7/site-packages"
+elif [[ -f "$NAOQI_SDK/lib/naoqi.py" ]]; then
+    NAOQI_SITE="$NAOQI_SDK/lib"
+else
+    echo "FEJL: naoqi.py ikke fundet i hverken:" >&2
+    echo "       $NAOQI_SDK/lib/python2.7/site-packages/naoqi.py   (pynaoqi-SDK)" >&2
+    echo "       $NAOQI_SDK/lib/naoqi.py                           (NAOqi-bundlet runtime)" >&2
+    echo "       Tjek at --naoqi-sdk peger paa SDK-roden eller den bundlede runtime-mappe." >&2
     exit 1
 fi
 

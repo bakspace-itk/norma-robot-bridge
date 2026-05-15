@@ -114,20 +114,24 @@ Hvis Python 2.7 hedder noget andet end `python2`:
     --python2 /usr/bin/python2.7
 ```
 
-### Windows cmd — standard Python 2.7
+### Windows cmd — standard Python 2.7 + separat pynaoqi-SDK
 
 ```cmd
 cd norma-robot-bridge
 scripts\setup-windows.bat C:\tools\pynaoqi
 ```
 
-### Windows cmd — NAOqi-bundlet Python 2.7
+Forventer `C:\tools\pynaoqi\lib\python2.7\site-packages\naoqi.py`.
+
+### Windows cmd — NAOqi-bundlet Python 2.7 (SDK og runtime i samme mappe)
 
 ```cmd
-scripts\setup-windows.bat C:\tools\pynaoqi C:\tools\python27-nao\bin\python2.exe C:\tools\python27-nao\lib\python2.7
+scripts\setup-windows.bat C:\tools\python27-nao C:\tools\python27-nao\bin\python2.exe C:\tools\python27-nao\lib\python2.7
 ```
 
-Det tredje argument (PYTHONHOME-stien) er **kun** nødvendigt når du bruger NAOqi-SDK'ets bundlede Python 2.7, der har et usædvanligt mappe-layout. Standard-installationer fra python.org behøver det ikke.
+Den bundlede distribution har `naoqi.py` direkte i `lib\` (ikke under `lib\python2.7\site-packages\`), og Python-runtimen har et usædvanligt layout. Scriptet auto-detekterer hvor `naoqi.py` ligger; det tredje argument er PYTHONHOME-stien som **kun** er nødvendig her — standard `python.org`-installationer behøver det ikke.
+
+Hvis du har den bundlede distribution liggende et andet sted: brug stien til den både som første argument (`NAOQI_SDK`) og som basis for `PYTHON2_EXE`/`PYTHONHOME_PATH`.
 
 ---
 
