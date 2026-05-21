@@ -34,6 +34,22 @@ from norma_bridge.robot import tablet
 _log = logging.getLogger(__name__)
 
 
+try:
+    _text_type = unicode  # Py 2.7
+except NameError:
+    _text_type = str  # Py 3 (kun for import-renhed; aldrig kaldt der)
+
+
+def _to_naoqi_str(value):
+    # unicode_literals goer projektets strenge til unicode, men NAOqi's
+    # SWIG-binding rejecter unicode med 'Wrong number or type of arguments'.
+    if isinstance(value, bytes):
+        return value
+    if isinstance(value, _text_type):
+        return value.encode("utf-8")
+    return str(value)
+
+
 class NormaRobotService(object):
     """Tradsikker wrapper omkring NAOqi-proxies (TTS, animation, tablet).
 
@@ -60,9 +76,11 @@ class NormaRobotService(object):
         self._interaction_count = 0
         self._lock = threading.RLock()
         # NAOqi-proxies. Disse blokerer indtil forbindelsen er etableret.
-        self._tts = ALProxy("ALTextToSpeech", robot_ip, robot_port)
-        self._anim = ALProxy("ALAnimationPlayer", robot_ip, robot_port)
-        self._tablet = ALProxy("ALTabletService", robot_ip, robot_port)
+        # Module-navne og IP encodes til bytes - NAOqi's SWIG-binding accepterer ikke unicode.
+        ip_bytes = _to_naoqi_str(robot_ip)
+        self._tts = ALProxy(_to_naoqi_str("ALTextToSpeech"), ip_bytes, robot_port)
+        self._anim = ALProxy(_to_naoqi_str("ALAnimationPlayer"), ip_bytes, robot_port)
+        self._tablet = ALProxy(_to_naoqi_str("ALTabletService"), ip_bytes, robot_port)
 
     # ------------- intern hjaelper -------------
     def _ensure_unicode(self, text):
@@ -104,7 +122,7 @@ class NormaRobotService(object):
             )
             if chosen_gesture:
                 try:
-                    self._anim.runTag(chosen_gesture)
+                    self._anim.runTag(_to_naoqi_str(chosen_gesture))
                 except Exception as e:
                     _log.warning("Gesture-fejl (%s): %s", chosen_gesture, e)
             return {
@@ -118,7 +136,7 @@ class NormaRobotService(object):
         with self._lock:
             if not gesture_name:
                 raise ValueError("gesture_name mangler")
-            self._anim.runTag(gesture_name)
+            self._anim.runTag(_to_naoqi_str(gesture_name))
             return {"played": gesture_name}
 
     def show_tablet_image(self, image_path):
@@ -130,7 +148,7 @@ class NormaRobotService(object):
             html = tablet.image_path_to_html(image_path)
             uri, _ = tablet.html_to_data_uri(html)
             self._hide_tablet_safe()
-            self._tablet.showWebview(uri)
+            self._tablet.showWebview(_to_naoqi_str(uri))
             return {"shown_image": os.path.abspath(image_path)}
 
     def show_tablet_html(self, html_content):
@@ -141,7 +159,7 @@ class NormaRobotService(object):
         with self._lock:
             uri, byte_length = tablet.html_to_data_uri(html_content)
             self._hide_tablet_safe()
-            self._tablet.showWebview(uri)
+            self._tablet.showWebview(_to_naoqi_str(uri))
             return {"html_length": byte_length}
 
     def show_tablet_url(self, url):
@@ -150,7 +168,7 @@ class NormaRobotService(object):
             if not url:
                 raise ValueError("url mangler")
             self._hide_tablet_safe()
-            self._tablet.showWebview(url)
+            self._tablet.showWebview(_to_naoqi_str(url))
             return {"shown_url": url}
 
     def hide_tablet(self):
