@@ -64,6 +64,19 @@ def service(proxies):
         yield svc
 
 
+# -------- _to_naoqi_str --------
+
+def test_to_naoqi_str_encoder_unicode_til_utf8_bytes():
+    from norma_bridge.robot.service import _to_naoqi_str
+    assert _to_naoqi_str("ALTextToSpeech") == b"ALTextToSpeech"
+    assert _to_naoqi_str(u"æøå") == b"\xc3\xa6\xc3\xb8\xc3\xa5"
+
+
+def test_to_naoqi_str_lader_bytes_vaere():
+    from norma_bridge.robot.service import _to_naoqi_str
+    assert _to_naoqi_str(b"already-bytes") == b"already-bytes"
+
+
 # -------- constructor --------
 
 def test_init_kaster_runtime_error_naar_naoqi_mangler():
@@ -212,7 +225,7 @@ def test_show_tablet_image_kalder_showwebview_med_data_uri(proxies, service, tin
     assert result == {"shown_image": os.path.abspath(tiny_png)}
     tab.showWebview.assert_called_once()
     uri = tab.showWebview.call_args[0][0]
-    assert uri.startswith("data:text/html;base64,")
+    assert uri.startswith(b"data:text/html;base64,")
 
 
 def test_show_tablet_image_kalder_hidewebview_foerst(proxies, service, tiny_png):
@@ -247,7 +260,7 @@ def test_show_tablet_html_kalder_showwebview_med_data_uri(proxies, service):
     result = service.show_tablet_html("<h1>Hej</h1>")
     assert result == {"html_length": len("<h1>Hej</h1>")}
     uri = tab.showWebview.call_args[0][0]
-    assert uri.startswith("data:text/html;base64,")
+    assert uri.startswith(b"data:text/html;base64,")
 
 
 def test_show_tablet_html_med_none_kaster_value_error(proxies, service):
@@ -260,11 +273,13 @@ def test_show_tablet_html_med_none_kaster_value_error(proxies, service):
 # -------- show_tablet_url --------
 
 def test_show_tablet_url_kalder_showwebview_direkte(proxies, service):
-    """Bemaerk: URL'en sendes uaendret - INGEN data-URI-konvertering."""
+    """Bemaerk: URL'en sendes uaendret indholdsmaessigt - INGEN data-URI-konvertering.
+    URL'en encodes dog til bytes ved NAOqi-graensefladen.
+    """
     _, _, tab = proxies
     url = "http://norma-ui.local:8000/dialog"
     result = service.show_tablet_url(url)
-    tab.showWebview.assert_called_once_with(url)
+    tab.showWebview.assert_called_once_with(url.encode("utf-8"))
     assert result == {"shown_url": url}
 
 
