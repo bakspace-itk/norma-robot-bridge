@@ -49,11 +49,14 @@ def service(proxies):
     tts, anim, tab = proxies
 
     def fake_proxy(name, ip, port):
+        # Service encoder modul-navne til bytes for NAOqi - decode tilbage til
+        # dict-opslag, saa testen ikke skal bruge baade unicode- og bytes-noegler.
+        key = name.decode("utf-8") if isinstance(name, bytes) else name
         return {
             "ALTextToSpeech": tts,
             "ALAnimationPlayer": anim,
             "ALTabletService": tab,
-        }[name]
+        }[key]
 
     with patch("norma_bridge.robot.service.ALProxy", side_effect=fake_proxy):
         from norma_bridge.robot.service import NormaRobotService
@@ -77,16 +80,19 @@ def test_init_opretter_tre_alproxy_instanser_med_korrekt_ip_og_port(proxies):
     tts, anim, tab = proxies
 
     def fake_proxy(name, ip, port):
-        return {"ALTextToSpeech": tts, "ALAnimationPlayer": anim, "ALTabletService": tab}[name]
+        key = name.decode("utf-8") if isinstance(name, bytes) else name
+        return {"ALTextToSpeech": tts, "ALAnimationPlayer": anim, "ALTabletService": tab}[key]
 
     with patch("norma_bridge.robot.service.ALProxy", side_effect=fake_proxy) as mock_proxy:
         from norma_bridge.robot.service import NormaRobotService
         NormaRobotService("10.0.0.1", 9559)
 
+    # NAOqi's SWIG-binding kraever bytes for char*-argumenter; service encoder
+    # baade modul-navn og IP til UTF-8.
     expected = [
-        call("ALTextToSpeech", "10.0.0.1", 9559),
-        call("ALAnimationPlayer", "10.0.0.1", 9559),
-        call("ALTabletService", "10.0.0.1", 9559),
+        call(b"ALTextToSpeech", b"10.0.0.1", 9559),
+        call(b"ALAnimationPlayer", b"10.0.0.1", 9559),
+        call(b"ALTabletService", b"10.0.0.1", 9559),
     ]
     assert mock_proxy.call_args_list == expected
 
@@ -136,7 +142,7 @@ def test_say_inkrementerer_interaction_count(service):
 def test_say_med_eksplicit_gesture_kalder_runtag(proxies, service):
     _, anim, _ = proxies
     service.say("hej", gesture="my/gesture")
-    anim.runTag.assert_called_once_with("my/gesture")
+    anim.runTag.assert_called_once_with(b"my/gesture")
 
 
 def test_say_uden_gesture_cykler_paa_lige_taeller(proxies, service):
@@ -146,7 +152,7 @@ def test_say_uden_gesture_cykler_paa_lige_taeller(proxies, service):
     # interaction 2 (lige) -> idx 2 % 3 = 2 -> "c"
     result = service.say("b")
     assert result["gesture"] == "c"
-    anim.runTag.assert_called_once_with("c")
+    anim.runTag.assert_called_once_with(b"c")
 
 
 def test_say_gesture_fejl_stopper_ikke_tts(proxies, service):
@@ -164,7 +170,7 @@ def test_say_gesture_fejl_stopper_ikke_tts(proxies, service):
 def test_play_gesture_kalder_runtag(proxies, service):
     _, anim, _ = proxies
     result = service.play_gesture("animations/Hey")
-    anim.runTag.assert_called_once_with("animations/Hey")
+    anim.runTag.assert_called_once_with(b"animations/Hey")
     assert result == {"played": "animations/Hey"}
 
 
