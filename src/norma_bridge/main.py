@@ -2,8 +2,11 @@
 """Entry point for norma-bridge.
 
 Eksempler:
-    # Mod fysisk robot, default config
+    # Mod fysisk robot - auto-loader config/local.ini hvis den findes
     python -m norma_bridge.main
+
+    # Mod fysisk robot med eksplicit IP (overstyrer config og ENV)
+    python -m norma_bridge.main --robot-ip 192.168.1.42
 
     # Mod fysisk robot med eksplicit config-fil
     python -m norma_bridge.main --config config/local.ini
@@ -21,7 +24,7 @@ import argparse
 import logging
 import sys
 
-from norma_bridge.config import load_config
+from norma_bridge.config import load_config, find_default_ini
 from norma_bridge.api.handlers import make_handler
 from norma_bridge.api.server import serve
 from norma_bridge.robot.intro import run_intro
@@ -46,6 +49,14 @@ def parse_args(argv=None):
     p.add_argument(
         "--port", type=int,
         help="Bind-port. Overstyrer config og NORMA_BRIDGE_PORT.",
+    )
+    p.add_argument(
+        "--robot-ip", metavar="IP",
+        help="IP-adresse til Pepper/NAO. Overstyrer config og NORMA_ROBOT_IP.",
+    )
+    p.add_argument(
+        "--robot-port", type=int, metavar="PORT",
+        help="NAOqi-port. Overstyrer config og NORMA_ROBOT_PORT.",
     )
     p.add_argument(
         "--fake", action="store_true",
@@ -85,6 +96,13 @@ def build_service(cfg, use_fake):
             robot_port=cfg.robot_port,
             gestures=cfg.gestures,
         )
+    if cfg.robot_ip is None:
+        raise SystemExit(
+            "Robot-IP mangler. Angiv en af foelgende:\n"
+            "  --robot-ip <IP>                  (CLI)\n"
+            "  NORMA_ROBOT_IP=<IP>              (miljovariabel)\n"
+            "  [robot] ip = <IP> i en INI-fil   (--config eller config/local.ini)"
+        )
     from norma_bridge.robot.service import NormaRobotService
     _log.info("Forbinder til NAOqi paa %s:%d", cfg.robot_ip, cfg.robot_port)
     return NormaRobotService(
@@ -94,17 +112,29 @@ def build_service(cfg, use_fake):
 
 def main(argv=None):
     args = parse_args(argv)
-    cfg = load_config(args.config)
+
+    ini_path = args.config if args.config is not None else find_default_ini()
+    cfg = load_config(ini_path)
 
     # CLI-args overstyrer alt andet
     if args.host is not None:
         cfg.host = args.host
     if args.port is not None:
         cfg.port = args.port
+    if args.robot_ip is not None:
+        cfg.robot_ip = args.robot_ip
+    if args.robot_port is not None:
+        cfg.robot_port = args.robot_port
     if args.log_level:
         cfg.log_level = args.log_level
 
     setup_logging(cfg.log_level)
+    if ini_path is None:
+        _log.info("Ingen config-fil indlaest (kun defaults + ENV + CLI)")
+    elif args.config is None:
+        _log.info("Auto-loadede config-fil: %s", ini_path)
+    else:
+        _log.info("Indlaest config-fil: %s", ini_path)
     _log.info("Norma bridge starter: %s", cfg)
 
     service = build_service(cfg, args.fake)

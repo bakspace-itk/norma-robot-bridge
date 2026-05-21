@@ -47,7 +47,13 @@ activate-with-naoqi.bat
 Så:
 
 ```bash
-# Mod ægte robot (kræver config-fil med din robots IP)
+# Mod ægte robot — auto-loader config/local.ini hvis den findes
+python -m norma_bridge.main
+
+# Mod ægte robot med eksplicit IP (overstyrer config og ENV)
+python -m norma_bridge.main --robot-ip 192.168.1.42
+
+# Mod ægte robot med eksplicit config-fil
 python -m norma_bridge.main --config config/local.ini
 
 # Lokal udvikling med FakeRobotService (ingen NAOqi påkrævet)
@@ -56,6 +62,8 @@ python -m norma_bridge.main --fake --port 8080
 # Spring intro over (hurtig genstart under udvikling)
 python -m norma_bridge.main --fake --no-intro
 ```
+
+Hvis `--config` udelades, leder bridge'en automatisk efter `config/local.ini` ved siden af pakken; hvis den ikke findes, prøves `config/default.ini`. Hvis ingen IP er sat (hverken via CLI, ENV eller INI) fejler bridge'en hurtigt med en hjælpsom besked.
 
 For ren fake-mode (uden NAOqi-import) er plain venv-aktivering nok — `source .venv27/bin/activate` på Linux, `.\.venv27\Scripts\Activate.ps1` i PowerShell. Det er det `scripts/dev-up.{ps1,sh}` bruger.
 
@@ -158,6 +166,7 @@ Klient-koden i `norma-input/src/norma_input/robot_client.py` (kommer i Fase 3) e
 ### Fejlfinding
 
 - **`{"status":"error","message":"NAOqi ALProxy ikke tilgængelig"}`** — NAOqi SDK er ikke installeret eller ikke importerbar i Py 2.7-miljøet. Verificér med `python2 -c "from naoqi import ALProxy; print('OK')"`.
+- **`Robot-IP mangler. Angiv en af følgende: ...`** — bridge'en kan ikke finde en robot-IP nogen steder. Sæt den med `--robot-ip <IP>`, eksportér `NORMA_ROBOT_IP=<IP>`, eller læg den i `config/local.ini` under `[robot] ip = ...`.
 - **Forbindelse nægtes til robot** — tjek `ROBOT_IP`/`ROBOT_PORT` i config, og at robotten kan ping'es fra værtsmaskinen.
 - **`Connection refused` på port 8080** — bridge kører ikke, eller en anden proces holder porten. Skift port i config eller stop den anden proces.
 - **Tablet viser intet** — billedstien skal være eksisterende på *bridge-maskinen* (ikke klientens). Tjek logs for `Billedfil ikke fundet`.
@@ -168,7 +177,9 @@ Klient-koden i `norma-input/src/norma_input/robot_client.py` (kommer i Fase 3) e
 
 Defaults er kodede i [src/norma_bridge/config.py](src/norma_bridge/config.py). Se [config/default.ini](config/default.ini) for en kommenteret reference med alle nøgler og deres ENV-overrides.
 
-Precedence: kodede defaults < INI-fil (`--config`) < ENV-vars (`NORMA_*`) < CLI-args.
+Hvis `--config` udelades, leder bridge'en automatisk efter `config/local.ini` ved siden af pakken; hvis den ikke findes, prøves `config/default.ini`. Du kan stadig pege på en hvilken som helst fil med `--config <sti>`.
+
+Precedence: kodede defaults < INI-fil (auto-loaded eller `--config`) < ENV-vars (`NORMA_*`) < CLI-args (`--robot-ip`, `--robot-port`, `--host`, `--port`, `--log-level`).
 
 Vigtigste nøgler:
 - `[robot]` `ip`, `port` — adresse på Pepper/NAO

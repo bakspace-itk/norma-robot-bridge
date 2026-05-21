@@ -30,7 +30,9 @@ cp config/default.ini config/local.ini
 # Redigér config/local.ini og sæt [robot] ip = <din-robots-ip>
 ```
 
-`config/local.ini` er gitignored — dine lokale ændringer bliver ikke commit'et.
+`config/local.ini` er gitignored — dine lokale ændringer bliver ikke commit'et. Bridge'en auto-loader `config/local.ini` hvis den findes, så `--config` er ikke længere påkrævet.
+
+Alternativt: spring config-filen over og giv IP'en på kommandolinjen med `--robot-ip <din-robots-ip>`.
 
 ## 2. Start bridge
 
@@ -38,10 +40,16 @@ I én terminal:
 
 ```bash
 cd norma-robot-bridge
-PYTHONPATH=src ./.venv27/Scripts/python.exe -m norma_bridge.main --config config/local.ini
+
+# Anbefalet — auto-loader config/local.ini
+PYTHONPATH=src ./.venv27/Scripts/python.exe -m norma_bridge.main
+
+# Eller med eksplicit IP (overstyrer config og ENV)
+PYTHONPATH=src ./.venv27/Scripts/python.exe -m norma_bridge.main --robot-ip <din-robots-ip>
 ```
 
 Forventet:
+- [ ] Logmeddelelse: `Auto-loadede config-fil: .../config/local.ini` (hvis ingen --config)
 - [ ] Logmeddelelse: `Norma bridge starter: BridgeConfig(robot=<ip>:9559, ...)`
 - [ ] Logmeddelelse: `Forbinder til NAOqi paa <ip>:9559`
 - [ ] Hvis `[intro]` er udfyldt i config: robotten kører animation, viser tablet, siger velkomst

@@ -15,6 +15,7 @@ import pytest
 from norma_bridge.config import (
     BridgeConfig,
     load_config,
+    find_default_ini,
     ENV_ROBOT_IP,
     ENV_ROBOT_PORT,
     ENV_BRIDGE_HOST,
@@ -28,7 +29,7 @@ from norma_bridge.robot.gestures import DEFAULT_GESTURES
 
 def test_load_uden_ini_eller_env_giver_defaults():
     cfg = load_config(env={})
-    assert cfg.robot_ip == "192.168.1.156"
+    assert cfg.robot_ip is None
     assert cfg.robot_port == 9559
     assert cfg.host == ""
     assert cfg.port == 8080
@@ -39,7 +40,7 @@ def test_load_uden_ini_eller_env_giver_defaults():
 
 def test_load_med_manglende_ini_fil_advarer_men_fortsaetter(caplog):
     cfg = load_config(ini_path="/findes/ikke.ini", env={})
-    assert cfg.robot_ip == "192.168.1.156"
+    assert cfg.robot_ip is None
     # warning logget
     assert any("findes ikke" in rec.message for rec in caplog.records)
 
@@ -217,3 +218,46 @@ def test_bridge_config_default_gestures_er_tuple():
     """Tuples er immutable - forhindrer at klienter muterer den globale default."""
     cfg = BridgeConfig()
     assert isinstance(cfg.gestures, tuple)
+
+
+def test_bridge_config_repr_med_unset_ip():
+    """Repr skal ikke kraske naar robot_ip er None - skal vise 'unset'."""
+    cfg = BridgeConfig()
+    text = repr(cfg)
+    assert "unset" in text
+
+
+# -------- find_default_ini --------
+
+def test_find_default_ini_foretraekker_local_over_default(tmp_path, monkeypatch):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    (config_dir / "default.ini").write_text("[robot]\nip = 1.1.1.1\n", encoding="utf-8")
+    (config_dir / "local.ini").write_text("[robot]\nip = 2.2.2.2\n", encoding="utf-8")
+    fake_package_dir = tmp_path / "src" / "norma_bridge"
+    fake_package_dir.mkdir(parents=True)
+    fake_config_file = fake_package_dir / "config.py"
+    fake_config_file.write_text("", encoding="utf-8")
+    monkeypatch.setattr("norma_bridge.config.__file__", str(fake_config_file))
+    assert find_default_ini() == str(config_dir / "local.ini")
+
+
+def test_find_default_ini_falder_tilbage_til_default_ini(tmp_path, monkeypatch):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    (config_dir / "default.ini").write_text("[robot]\nip = 1.1.1.1\n", encoding="utf-8")
+    fake_package_dir = tmp_path / "src" / "norma_bridge"
+    fake_package_dir.mkdir(parents=True)
+    fake_config_file = fake_package_dir / "config.py"
+    fake_config_file.write_text("", encoding="utf-8")
+    monkeypatch.setattr("norma_bridge.config.__file__", str(fake_config_file))
+    assert find_default_ini() == str(config_dir / "default.ini")
+
+
+def test_find_default_ini_returnerer_none_naar_intet_findes(tmp_path, monkeypatch):
+    fake_package_dir = tmp_path / "src" / "norma_bridge"
+    fake_package_dir.mkdir(parents=True)
+    fake_config_file = fake_package_dir / "config.py"
+    fake_config_file.write_text("", encoding="utf-8")
+    monkeypatch.setattr("norma_bridge.config.__file__", str(fake_config_file))
+    assert find_default_ini() is None

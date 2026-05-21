@@ -44,7 +44,7 @@ class BridgeConfig(object):
     """Konsolideret konfiguration for bridge'en."""
 
     def __init__(self,
-                 robot_ip="192.168.1.156",
+                 robot_ip=None,
                  robot_port=9559,
                  host="",
                  port=8080,
@@ -64,7 +64,8 @@ class BridgeConfig(object):
             "BridgeConfig(robot=%s:%d, server=%s:%d, "
             "gestures=%d items, intro=%s, log_level=%s)"
         ) % (
-            self.robot_ip, self.robot_port,
+            self.robot_ip if self.robot_ip is not None else "unset",
+            self.robot_port,
             self.host or "0.0.0.0", self.port,
             len(self.gestures),
             "set" if self.intro is not None else "none",
@@ -99,6 +100,27 @@ def _parse_intro(parser):
     if not any(fields.values()):
         return None
     return IntroConfig(**fields)
+
+
+def find_default_ini():
+    """Find en INI-fil at laese hvis --config ikke er angivet.
+
+    Returnerer foerste sti der eksisterer:
+      1. ``<repo-rod>/config/local.ini`` (operator-tilpasset)
+      2. ``<repo-rod>/config/default.ini`` (kommenteret reference)
+      3. ``None`` hvis ingen findes (saa bruges kode-defaults + ENV alene)
+
+    Repo-roden bestemmes ud fra denne fils placering
+    (``src/norma_bridge/config.py`` -> to mapper op).
+    """
+    package_dir = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.dirname(os.path.dirname(package_dir))
+    config_dir = os.path.join(repo_root, "config")
+    for filename in ("local.ini", "default.ini"):
+        path = os.path.join(config_dir, filename)
+        if os.path.exists(path):
+            return path
+    return None
 
 
 def load_config(ini_path=None, env=None):
