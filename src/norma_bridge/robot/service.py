@@ -50,6 +50,28 @@ def _to_naoqi_str(value):
     return str(value)
 
 
+# NAOqi-fejl med disse markers behandles som transient og udloeser proxy-recreate.
+# Hold listen lille og praecis - vi vil ikke fange genuine programmer-fejl.
+_TRANSIENT_NAOQI_MARKERS = (
+    "module destroyed",
+)
+
+
+def _is_transient_naoqi_error(exc):
+    if not isinstance(exc, RuntimeError):
+        return False
+    msg = str(exc).lower()
+    return any(marker in msg for marker in _TRANSIENT_NAOQI_MARKERS)
+
+
+# Mapping fra proxy-attribut til NAOqi-modul-navn. Bruges af _recreate_proxy.
+_PROXY_MODULES = {
+    "_tts": "ALTextToSpeech",
+    "_anim": "ALAnimationPlayer",
+    "_tablet": "ALTabletService",
+}
+
+
 class NormaRobotService(object):
     """Tradsikker wrapper omkring NAOqi-proxies (TTS, animation, tablet).
 
@@ -75,14 +97,53 @@ class NormaRobotService(object):
         self._gestures = tuple(gestures) if gestures else ()
         self._interaction_count = 0
         self._lock = threading.RLock()
-        # NAOqi-proxies. Disse blokerer indtil forbindelsen er etableret.
-        # Module-navne og IP encodes til bytes - NAOqi's SWIG-binding accepterer ikke unicode.
-        ip_bytes = _to_naoqi_str(robot_ip)
-        self._tts = ALProxy(_to_naoqi_str("ALTextToSpeech"), ip_bytes, robot_port)
-        self._anim = ALProxy(_to_naoqi_str("ALAnimationPlayer"), ip_bytes, robot_port)
-        self._tablet = ALProxy(_to_naoqi_str("ALTabletService"), ip_bytes, robot_port)
+        # NAOqi-proxies. Initial konstruktion blokerer indtil forbindelse.
+        # _recreate_proxy haandterer baade foerste-konstruktion og senere reconnect.
+        self._tts = None
+        self._anim = None
+        self._tablet = None
+        for attr in _PROXY_MODULES:
+            self._recreate_proxy(attr)
 
     # ------------- intern hjaelper -------------
+
+    def _recreate_proxy(self, attr_name):
+        """Konstruer (eller genopret) en NAOqi-proxy ved attribut-navn.
+
+        Kalderen er ansvarlig for at vaere indenfor ``self._lock`` (eller at
+        koere i constructor for foerste-konstruktion). Modul-navn og IP
+        encodes til bytes - NAOqi's SWIG-binding accepterer ikke unicode.
+        """
+        module_name = _PROXY_MODULES[attr_name]
+        new_proxy = ALProxy(
+            _to_naoqi_str(module_name),
+            _to_naoqi_str(self.robot_ip),
+            self.robot_port,
+        )
+        setattr(self, attr_name, new_proxy)
+
+    def _safe_call(self, proxy_attr, method_name, *args):
+        """Kald metode paa NAOqi-proxy med automatisk reconnect ved transient fejl.
+
+        Hvis forbindelsen er gaaet tabt (typisk fordi NAOqi-modulet er restartet
+        eller robotten har mistet wifi midlertidigt), genoprettes proxy'en og
+        kaldet retries een gang. Andre fejl propageres uaendret.
+
+        Kalderen er ansvarlig for at vaere indenfor ``self._lock``.
+        """
+        proxy = getattr(self, proxy_attr)
+        try:
+            return getattr(proxy, method_name)(*args)
+        except RuntimeError as e:
+            if not _is_transient_naoqi_error(e):
+                raise
+            _log.warning(
+                "Transient NAOqi-fejl paa %s.%s: %s - genopretter proxy og retry",
+                proxy_attr, method_name, e,
+            )
+            self._recreate_proxy(proxy_attr)
+            return getattr(getattr(self, proxy_attr), method_name)(*args)
+
     def _ensure_unicode(self, text):
         """Konverter input til unicode (bevarer Py 2/3-kompatibilitet)."""
         if text is None:
@@ -102,7 +163,7 @@ class NormaRobotService(object):
         kaster NAOqi en exception, og det er ufarligt.
         """
         try:
-            self._tablet.hideWebview()
+            self._safe_call("_tablet", "hideWebview")
         except Exception as e:
             _log.debug("hideWebview ignoreret: %s", e)
 
@@ -116,13 +177,13 @@ class NormaRobotService(object):
         with self._lock:
             utext = self._ensure_unicode(text)
             self._interaction_count += 1
-            self._tts.say(self._to_tts_bytes(utext))
+            self._safe_call("_tts", "say", self._to_tts_bytes(utext))
             chosen_gesture = gesture or cycle_gesture(
                 self._interaction_count, self._gestures
             )
             if chosen_gesture:
                 try:
-                    self._anim.runTag(_to_naoqi_str(chosen_gesture))
+                    self._safe_call("_anim", "runTag", _to_naoqi_str(chosen_gesture))
                 except Exception as e:
                     _log.warning("Gesture-fejl (%s): %s", chosen_gesture, e)
             return {
@@ -136,7 +197,7 @@ class NormaRobotService(object):
         with self._lock:
             if not gesture_name:
                 raise ValueError("gesture_name mangler")
-            self._anim.runTag(_to_naoqi_str(gesture_name))
+            self._safe_call("_anim", "runTag", _to_naoqi_str(gesture_name))
             return {"played": gesture_name}
 
     def show_tablet_image(self, image_path):
@@ -148,7 +209,7 @@ class NormaRobotService(object):
             html = tablet.image_path_to_html(image_path)
             uri, _ = tablet.html_to_data_uri(html)
             self._hide_tablet_safe()
-            self._tablet.showWebview(_to_naoqi_str(uri))
+            self._safe_call("_tablet", "showWebview", _to_naoqi_str(uri))
             return {"shown_image": os.path.abspath(image_path)}
 
     def show_tablet_html(self, html_content):
@@ -159,7 +220,7 @@ class NormaRobotService(object):
         with self._lock:
             uri, byte_length = tablet.html_to_data_uri(html_content)
             self._hide_tablet_safe()
-            self._tablet.showWebview(_to_naoqi_str(uri))
+            self._safe_call("_tablet", "showWebview", _to_naoqi_str(uri))
             return {"html_length": byte_length}
 
     def show_tablet_url(self, url):
@@ -168,13 +229,13 @@ class NormaRobotService(object):
             if not url:
                 raise ValueError("url mangler")
             self._hide_tablet_safe()
-            self._tablet.showWebview(_to_naoqi_str(url))
+            self._safe_call("_tablet", "showWebview", _to_naoqi_str(url))
             return {"shown_url": url}
 
     def hide_tablet(self):
         """Skjul tabletten."""
         with self._lock:
-            self._tablet.hideWebview()
+            self._safe_call("_tablet", "hideWebview")
             return {"hidden": True}
 
     def get_status(self):

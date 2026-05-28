@@ -114,6 +114,8 @@ curl -X POST http://<host>:8080/api/command \
      -H "Content-Type: application/json" \
      -d '{"command":"say","params":{"text":"Hej","gesture":"animations/Stand/Gestures/Hey_1"}}'
 
+curl -X POST http://<host>:8080/api/command -H "Content-Type: application/json" -d '{"command":"say","params":{"text":"Hej","gesture":"animations/Stand/Gestures/Hey_1"}}'
+
 # Afspil gesture
 curl -X POST http://<host>:8080/api/command \
      -H "Content-Type: application/json" \
