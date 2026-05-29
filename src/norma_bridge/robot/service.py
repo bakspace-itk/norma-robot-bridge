@@ -19,6 +19,7 @@ from __future__ import print_function, unicode_literals
 import logging
 import os
 import threading
+import time
 
 try:
     from naoqi import ALProxy
@@ -228,7 +229,13 @@ class NormaRobotService(object):
         with self._lock:
             if not url:
                 raise ValueError("url mangler")
+            # We might not need the sleep and wakeups, but it works
+            self._safe_call("_tablet", "wakeUp")
+            time.sleep(1)
+
             self._hide_tablet_safe()
+            time.sleep(1)
+            
             self._safe_call("_tablet", "showWebview", _to_naoqi_str(url))
             return {"shown_url": url}
 
