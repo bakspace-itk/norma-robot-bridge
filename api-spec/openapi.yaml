@@ -1,7 +1,7 @@
 openapi: 3.0.3
 
 info:
-  title: Norma Robot Bridge API
+  title: Pepper Robot Bridge API
   version: 0.1.0
   description: |
     HTTP-bridge der eksponerer NAOqi-funktionalitet (TTS, animationer, tablet)
@@ -90,7 +90,7 @@ paths:
                 value:
                   command: say
                   params:
-                    text: Hej Norma
+                    text: Hello world
                     gesture: hello
               play_gesture:
                 summary: Afspil named gesture
@@ -103,7 +103,7 @@ paths:
                 value:
                   command: show_tablet_url
                   params:
-                    url: http://norma-ui.local:8000/dialog
+                    url: http://ui.example.local:8000/dialog
               show_tablet_image:
                 summary: Vis lokalt billede (legacy data-URI)
                 value:
@@ -115,7 +115,7 @@ paths:
                 value:
                   command: show_tablet_html
                   params:
-                    html: <h1>Hej Norma</h1>
+                    html: <h1>Hello world</h1>
               hide_tablet:
                 summary: Skjul webview
                 value:
@@ -138,7 +138,7 @@ paths:
                   value:
                     status: success
                     data:
-                      spoken_text: Hej Norma
+                      spoken_text: Hello world
                       gesture: hello
                       interaction_count: 1
                 play_gesture:
@@ -150,7 +150,7 @@ paths:
                   value:
                     status: success
                     data:
-                      shown_url: http://norma-ui.local:8000/dialog
+                      shown_url: http://ui.example.local:8000/dialog
                 show_tablet_image:
                   value:
                     status: success
@@ -317,8 +317,8 @@ components:
           properties:
             text:
               type: string
-              description: Sætningen Norma skal sige (UTF-8). Tom streng er gyldig.
-              example: Hej Norma
+              description: Sætningen robotten skal sige (UTF-8). Tom streng er gyldig.
+              example: Hello world
             gesture:
               type: string
               nullable: true
@@ -383,7 +383,7 @@ components:
             html:
               type: string
               description: HTML-streng der vises på tabletten.
-              example: <h1>Hej Norma</h1>
+              example: <h1>Hello world</h1>
             html_content:
               type: string
               description: Legacy alias for `html`.
@@ -404,8 +404,8 @@ components:
               format: uri
               description: |
                 URL som tabletten åbner i sin WebView. Foretrukken metode i
-                den nye arkitektur — peges typisk på en `norma-ui`-side.
-              example: http://norma-ui.local:8000/dialog
+                den nye arkitektur — peges typisk på en ekstern UI-side.
+              example: http://ui.example.local:8000/dialog
 
     HideTabletCommand:
       type: object

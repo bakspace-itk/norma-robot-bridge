@@ -12,7 +12,7 @@ import tempfile
 
 import pytest
 
-from norma_bridge.config import (
+from pepper_bridge.config import (
     BridgeConfig,
     load_config,
     find_default_ini,
@@ -22,7 +22,7 @@ from norma_bridge.config import (
     ENV_BRIDGE_PORT,
     ENV_LOG_LEVEL,
 )
-from norma_bridge.robot.gestures import DEFAULT_GESTURES
+from pepper_bridge.robot.gestures import DEFAULT_GESTURES
 
 
 # -------- defaults --------
@@ -140,14 +140,14 @@ def test_ini_intro_med_alle_felter(write_ini):
     ini = write_ini("""
 [intro]
 animation_tag = cloud
-image_url = http://norma-ui.local/intro
-welcome_text = Hej Norma
+image_url = http://ui.example.local/intro
+welcome_text = Hello world
 """)
     cfg = load_config(ini_path=ini, env={})
     assert cfg.intro is not None
     assert cfg.intro.animation_tag == "cloud"
-    assert cfg.intro.image_url == "http://norma-ui.local/intro"
-    assert cfg.intro.welcome_text == "Hej Norma"
+    assert cfg.intro.image_url == "http://ui.example.local/intro"
+    assert cfg.intro.welcome_text == "Hello world"
     assert cfg.intro.image_path is None
 
 
@@ -234,11 +234,11 @@ def test_find_default_ini_foretraekker_local_over_default(tmp_path, monkeypatch)
     config_dir.mkdir()
     (config_dir / "default.ini").write_text("[robot]\nip = 1.1.1.1\n", encoding="utf-8")
     (config_dir / "local.ini").write_text("[robot]\nip = 2.2.2.2\n", encoding="utf-8")
-    fake_package_dir = tmp_path / "src" / "norma_bridge"
+    fake_package_dir = tmp_path / "src" / "pepper_bridge"
     fake_package_dir.mkdir(parents=True)
     fake_config_file = fake_package_dir / "config.py"
     fake_config_file.write_text("", encoding="utf-8")
-    monkeypatch.setattr("norma_bridge.config.__file__", str(fake_config_file))
+    monkeypatch.setattr("pepper_bridge.config.__file__", str(fake_config_file))
     assert find_default_ini() == str(config_dir / "local.ini")
 
 
@@ -246,18 +246,18 @@ def test_find_default_ini_falder_tilbage_til_default_ini(tmp_path, monkeypatch):
     config_dir = tmp_path / "config"
     config_dir.mkdir()
     (config_dir / "default.ini").write_text("[robot]\nip = 1.1.1.1\n", encoding="utf-8")
-    fake_package_dir = tmp_path / "src" / "norma_bridge"
+    fake_package_dir = tmp_path / "src" / "pepper_bridge"
     fake_package_dir.mkdir(parents=True)
     fake_config_file = fake_package_dir / "config.py"
     fake_config_file.write_text("", encoding="utf-8")
-    monkeypatch.setattr("norma_bridge.config.__file__", str(fake_config_file))
+    monkeypatch.setattr("pepper_bridge.config.__file__", str(fake_config_file))
     assert find_default_ini() == str(config_dir / "default.ini")
 
 
 def test_find_default_ini_returnerer_none_naar_intet_findes(tmp_path, monkeypatch):
-    fake_package_dir = tmp_path / "src" / "norma_bridge"
+    fake_package_dir = tmp_path / "src" / "pepper_bridge"
     fake_package_dir.mkdir(parents=True)
     fake_config_file = fake_package_dir / "config.py"
     fake_config_file.write_text("", encoding="utf-8")
-    monkeypatch.setattr("norma_bridge.config.__file__", str(fake_config_file))
+    monkeypatch.setattr("pepper_bridge.config.__file__", str(fake_config_file))
     assert find_default_ini() is None

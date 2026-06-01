@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
 """Command-dispatcher med decorator-baseret registry.
 
-Erstatter ``_legacy.py:_dispatch`` (linjer 294-319), der havde dispatch-logikken
-som en if/elif-kaede der voksede ukontrollabelt med antallet af kommandoer.
-
-Registry-moenstret giver:
-
-- Hver kommando er en self-contained funktion der kan unit-testes uafhaengigt.
-- At tilfoeje en ny kommando er en enkelt ``@registry.register(...)`` - ingen
-  aendringer til dispatcher eller handler.
-- Klare 400 vs 500 fejl-koder via konsekvent ``ValueError``-konvention.
+Hver kommando er en self-contained funktion der kan unit-testes uafhaengigt.
+At tilfoeje en ny kommando er en enkelt ``@registry.register(...)`` - ingen
+aendringer til dispatcher eller handler. ``ValueError`` konverteres til
+HTTP 400 af handler-laget; andre exceptions bliver HTTP 500.
 """
 
 from __future__ import print_function, unicode_literals

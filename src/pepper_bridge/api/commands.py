@@ -3,7 +3,7 @@
 
 Hver funktion modtager ``(service, params)`` og returnerer en dict der bliver
 serialiseret som JSON-svar. Funktionerne er bevidst tynde indpakninger om
-``NormaRobotService``-metoderne - validering af obligatoriske parametre sker
+``PepperRobotService``-metoderne - validering af obligatoriske parametre sker
 HER (ikke i service'en) saa fejlen kan konverteres til HTTP 400.
 
 At importere dette modul registrerer alle handlers paa den globale ``registry``
@@ -13,7 +13,7 @@ self-contained command-modul.
 
 from __future__ import print_function, unicode_literals
 
-from norma_bridge.api.dispatcher import registry
+from pepper_bridge.api.dispatcher import registry
 
 
 @registry.register("say")

@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
 """Gesture-cycling-logik og default tag-liste.
 
-I legacy-monolitten (``_legacy.py``) levede gesture-listen som en modul-global
-konstant og cycling-logikken som en privat metode på ``NormaRobotService``.
-Her er begge dele samlet og gjort rene/data-drevne saa de kan testes uden robot.
-
 Gesture-tags er korte navne der svarer til ``ALAnimationPlayer.runTag()`` -
-ikke fulde animation-paths.
+ikke fulde animation-paths. Kan overstyres via config.
 """
 
 from __future__ import print_function, unicode_literals
 
 
-# Default gesture-tags i samme raekkefoelge som legacy-monolitten.
-# Kilde: norma-archive/Norma_Output.py:51-62.
+# Default gesture-tags. Disse er standard NAOqi-tags som typisk er
+# tilgaengelige paa en fabriksny Pepper - kan overstyres via config.
 DEFAULT_GESTURES = (
     "hello",
     "happy",
@@ -39,7 +35,7 @@ def cycle_gesture(interaction_count, gestures=DEFAULT_GESTURES):
 
     Argumenter:
         interaction_count: heltal >= 0. Typisk vaerdien af
-            ``NormaRobotService._interaction_count`` efter inkrement.
+            ``PepperRobotService._interaction_count`` efter inkrement.
         gestures: sekvens af tags. Default er ``DEFAULT_GESTURES``. Kan
             overrides via config naar bridge'ens config-loader er paa plads.
 

@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Startup-intro for Norma.
-
-Refaktoreret fra ``_legacy.py:_startup_intro`` (linjer 116-149) til en
-ren funktion der bruger ``NormaRobotService``s offentlige API i stedet for
-at duplikere tablet-/TTS-koden.
+"""Startup-intro flow.
 
 Designvalg:
 
@@ -11,10 +7,9 @@ Designvalg:
 - Konfigurationen er data-drevet via ``IntroConfig``: hvert trin er valgfrit
   og kan deaktiveres ved at saette feltet til None.
 - Hvert trin har sit eget try/except saa en fejl i intro-animationen ikke
-  forhindrer velkomst-tts'en. Det er den ENESTE del af bridge'en hvor stille
-  ``try/except: pass`` er bevidst tilladt - se ``CLAUDE.md``.
-- Foretrukken intro-billed-mekanisme: ``image_url`` (peges paa norma-ui via
-  ``show_tablet_url``). ``image_path`` bevares som fallback for legacy-flow.
+  forhindrer velkomst-tts'en.
+- Foretrukken intro-billed-mekanisme: ``image_url`` (peges paa et eksternt UI via
+  ``show_tablet_url``). ``image_path`` bevares som fallback for data-URI-flow.
 """
 
 from __future__ import print_function, unicode_literals
@@ -64,7 +59,7 @@ def run_intro(service, config, logger=None):
     """Koer startup-intro mod en allerede konstrueret service.
 
     Argumenter:
-        service: en ``NormaRobotService`` eller ``FakeRobotService``.
+        service: en ``PepperRobotService`` eller ``FakeRobotService``.
         config: en ``IntroConfig`` eller None (springes intro over).
         logger: valgfri logger til fejl-rapportering. Default: modul-logger.
 

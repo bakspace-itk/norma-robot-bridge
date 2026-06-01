@@ -1,13 +1,5 @@
 # -*- coding: utf-8 -*-
-"""NormaRobotService - tradsikker NAOqi-wrapper.
-
-Refaktoreret fra ``_legacy.py`` linjer 67-149. Aendringer ift. legacy:
-
-- ``__init__`` er en ren constructor. Intro-flowet er flyttet til ``intro.py``.
-- Tablet-HTML/data-URI bruger ``tablet.py``-helpers (ingen lokal duplikering).
-- Gesture-cycling kalder ``gestures.cycle_gesture`` (ingen lokal duplikering).
-- Logning routes gennem stdlib ``logging`` i stedet for ``print()``.
-- Ny offentlig metode ``show_tablet_url`` til at pege tabletten paa en URL.
+"""PepperRobotService - tradsikker NAOqi-wrapper.
 
 Den offentlige API matcher 1:1 ``FakeRobotService``-kontrakten i ``fakes.py``.
 Hvis du aendrer en metodes return-vaerdi her, skal du aendre den paa fake'en
@@ -28,8 +20,8 @@ except ImportError:
     # Constructor hejser eksplicit fejl naar nogen forsoeger at instantiere.
     ALProxy = None
 
-from norma_bridge.robot.gestures import DEFAULT_GESTURES, cycle_gesture
-from norma_bridge.robot import tablet
+from pepper_bridge.robot.gestures import DEFAULT_GESTURES, cycle_gesture
+from pepper_bridge.robot import tablet
 
 
 _log = logging.getLogger(__name__)
@@ -73,7 +65,7 @@ _PROXY_MODULES = {
 }
 
 
-class NormaRobotService(object):
+class PepperRobotService(object):
     """Tradsikker wrapper omkring NAOqi-proxies (TTS, animation, tablet).
 
     Argumenter:
@@ -90,7 +82,7 @@ class NormaRobotService(object):
     def __init__(self, robot_ip, robot_port=9559, gestures=DEFAULT_GESTURES):
         if ALProxy is None:
             raise RuntimeError(
-                "NAOqi ALProxy ikke tilgaengelig. NormaRobotService kraever "
+                "NAOqi ALProxy ikke tilgaengelig. PepperRobotService kraever "
                 "Python 2.7 + NAOqi SDK. Brug FakeRobotService til lokal test."
             )
         self.robot_ip = robot_ip
@@ -225,7 +217,7 @@ class NormaRobotService(object):
             return {"html_length": byte_length}
 
     def show_tablet_url(self, url):
-        """Peg tablet-WebView paa en URL. Foretrukket flow til norma-ui."""
+        """Peg tablet-WebView paa en URL. Foretrukket flow til ekstern WebView-side."""
         with self._lock:
             if not url:
                 raise ValueError("url mangler")

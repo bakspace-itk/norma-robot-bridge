@@ -13,9 +13,9 @@ import tempfile
 
 import pytest
 
-from norma_bridge.api.dispatcher import registry
-import norma_bridge.api.commands  # noqa: F401 - import for at registrere
-from norma_bridge.robot.fakes import FakeRobotService
+from pepper_bridge.api.dispatcher import registry
+import pepper_bridge.api.commands  # noqa: F401 - import for at registrere
+from pepper_bridge.robot.fakes import FakeRobotService
 
 
 @pytest.fixture

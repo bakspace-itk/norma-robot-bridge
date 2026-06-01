@@ -14,7 +14,7 @@ import tempfile
 
 import pytest
 
-from norma_bridge.robot.tablet import (
+from pepper_bridge.robot.tablet import (
     image_path_to_html,
     html_to_data_uri,
 )

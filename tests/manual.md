@@ -11,7 +11,7 @@ Tag estimat: 10–15 min hvis intet fejler.
 
 ## 0. Forudsætninger
 
-- [ ] Python 2.7-venv'en er sat op: `norma-robot-bridge/.venv27/`
+- [ ] Python 2.7-venv'en er sat op: `pepper-robot-bridge/.venv27/`
 - [ ] NAOqi SDK er importerbar fra venv'en — verificér med:
   ```bash
   ./.venv27/Scripts/python.exe -c "from naoqi import ALProxy; print('OK')"
@@ -39,21 +39,21 @@ Alternativt: spring config-filen over og giv IP'en på kommandolinjen med `--rob
 I én terminal:
 
 ```bash
-cd norma-robot-bridge
+cd pepper-robot-bridge
 
 # Anbefalet — auto-loader config/local.ini
-PYTHONPATH=src ./.venv27/Scripts/python.exe -m norma_bridge.main
+PYTHONPATH=src ./.venv27/Scripts/python.exe -m pepper_bridge.main
 
 # Eller med eksplicit IP (overstyrer config og ENV)
-PYTHONPATH=src ./.venv27/Scripts/python.exe -m norma_bridge.main --robot-ip <din-robots-ip>
+PYTHONPATH=src ./.venv27/Scripts/python.exe -m pepper_bridge.main --robot-ip <din-robots-ip>
 ```
 
 Forventet:
 - [ ] Logmeddelelse: `Auto-loadede config-fil: .../config/local.ini` (hvis ingen --config)
-- [ ] Logmeddelelse: `Norma bridge starter: BridgeConfig(robot=<ip>:9559, ...)`
+- [ ] Logmeddelelse: `Pepper bridge starter: BridgeConfig(robot=<ip>:9559, ...)`
 - [ ] Logmeddelelse: `Forbinder til NAOqi paa <ip>:9559`
 - [ ] Hvis `[intro]` er udfyldt i config: robotten kører animation, viser tablet, siger velkomst
-- [ ] Logmeddelelse: `Norma bridge lytter paa 0.0.0.0:8080`
+- [ ] Logmeddelelse: `Pepper bridge lytter paa 0.0.0.0:8080`
 
 Hvis det hænger ved "Forbinder til NAOqi": NAOqi-proxy'en kan ikke nå robotten. Stop med Ctrl+C og dobbelttjek IP/netværk.
 
@@ -169,12 +169,12 @@ curl -X POST $BRIDGE/api/command \
 ```bash
 curl -X POST $BRIDGE/api/command \
      -H "Content-Type: application/json" \
-     -d '{"command":"show_tablet_html","params":{"html":"<h1 style=\"font-size:8em;text-align:center\">Hej Norma</h1>"}}'
+     -d '{"command":"show_tablet_html","params":{"html":"<h1 style=\"font-size:8em;text-align:center\">Hello world</h1>"}}'
 ```
 
 - [ ] HTTP 200
 - [ ] Response: `{"status":"success","data":{"html_length":<n>}}`
-- [ ] **Robotten viser overskriften "Hej Norma" på tabletten**
+- [ ] **Robotten viser overskriften "Hello world" på tabletten**
 
 ### 3.9 hide_tablet
 

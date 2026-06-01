@@ -1,0 +1,7 @@
+include README.md
+include LICENSE
+include pyproject.toml
+include requirements.txt
+include config/default.ini
+include api-spec/openapi.yaml
+recursive-include scripts *.sh *.bat README.md

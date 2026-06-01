@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# setup-linux.sh - opsaet norma-robot-bridge paa en Linux-maskine.
+# setup-linux.sh - opsaet pepper-robot-bridge paa en Linux-maskine.
 #
 # Forudsaetninger (kan ikke automatiseres - laes scripts/README.md):
 #   1. Python 2.7 + pip + virtualenv installeret
@@ -22,7 +22,7 @@ PYTHON2_BIN="python2"
 
 print_help() {
     cat <<EOF
-setup-linux.sh - opsaet norma-robot-bridge paa Linux
+setup-linux.sh - opsaet pepper-robot-bridge paa Linux
 
 Brug:
   ./scripts/setup-linux.sh --naoqi-sdk PATH [--python2 BIN] [-h|--help]
@@ -119,9 +119,22 @@ echo "       virtualenv: $("$PYTHON2_BIN" -m virtualenv --version 2>&1)"
 echo
 
 # ---------- venv ----------
+# Venv'er har hardcoded stier; hvis bridge-mappen er omdoebt siden venv'et
+# blev oprettet, peger activate paa en ikke-eksisterende sti og falder tilbage
+# paa system-Python. Tjek dette og regenerer hvis stale.
+needs_venv=0
 if [[ -d ".venv27" ]]; then
-    echo "[3/6] .venv27 eksisterer allerede - genbruger."
+    if grep -q "VIRTUAL_ENV=\"$PWD/.venv27\"" .venv27/bin/activate 2>/dev/null; then
+        echo "[3/6] .venv27 eksisterer allerede - genbruger."
+    else
+        echo "[3/6] .venv27 peger paa en anden mappe (sandsynligvis efter mappe-rename) - regenererer..."
+        rm -rf .venv27
+        needs_venv=1
+    fi
 else
+    needs_venv=1
+fi
+if [[ $needs_venv -eq 1 ]]; then
     echo "[3/6] Opretter .venv27..."
     "$PYTHON2_BIN" -m virtualenv .venv27
 fi
@@ -149,7 +162,7 @@ cat > "$ACTIVATE_HELPER" <<EOF
 THIS_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
 source "\$THIS_DIR/.venv27/bin/activate"
 export PYTHONPATH="$NAOQI_SITE:\${PYTHONPATH:-}"
-echo "norma-bridge venv + NAOqi klar (PYTHONPATH inkluderer pynaoqi)."
+echo "pepper-bridge venv + NAOqi klar (PYTHONPATH inkluderer pynaoqi)."
 EOF
 chmod +x "$ACTIVATE_HELPER"
 echo "       OK"
@@ -178,7 +191,7 @@ echo
 echo "    1. cp config/default.ini config/local.ini"
 echo "    2. Redigér config/local.ini og saet [robot] ip = <din-robots-IP>"
 echo "    3. source ./activate-with-naoqi.sh"
-echo "    4. python -m norma_bridge.main --config config/local.ini"
+echo "    4. python -m pepper_bridge.main --config config/local.ini"
 echo
 echo "  Smoketest mod fysisk robot: tests/manual.md"
 echo "===================================================================="

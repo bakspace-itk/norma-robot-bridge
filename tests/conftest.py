@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """pytest-konfiguration der tilfoejer src/ til sys.path saa tests kan
-importere norma_bridge uden at pakken er installeret med pip install -e."""
+importere pepper_bridge uden at pakken er installeret med pip install -e."""
 
 from __future__ import print_function
 

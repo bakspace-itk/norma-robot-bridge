@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
 """Threaded HTTP-server.
 
-Refaktoreret fra ``_legacy.py:ThreadedHTTPServer`` (linjer 235-237) og
-``run_server`` (linjer 325-342).
-
-NormaRobotService er trådsikker (RLock), saa serveren kan haandtere flere
-samtidige requests. Hver kommando er hurtig (TTS-kaldet bloker mens robotten
-taler, men det er ikke vores problem at parallelisere det - lad NAOqi
-serialisere selv).
+PepperRobotService er trådsikker (RLock), saa serveren kan haandtere flere
+samtidige requests. Hver kommando er hurtig - TTS-kaldet bloker mens robotten
+taler, men NAOqi serialiserer selv.
 """
 
 from __future__ import print_function, unicode_literals
@@ -48,7 +44,7 @@ def serve(handler_cls, host="", port=8080):
         port: TCP-port. Default 8080.
     """
     httpd = ThreadedHTTPServer((host, port), handler_cls)
-    _log.info("Norma bridge lytter paa %s:%d", host or "0.0.0.0", port)
+    _log.info("Pepper bridge lytter paa %s:%d", host or "0.0.0.0", port)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

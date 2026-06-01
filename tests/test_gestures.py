@@ -3,12 +3,12 @@
 
 Verificerer at den udtrukne pure funktion ``cycle_gesture`` overholder
 samme kontrakt som den oprindelige ``_cycle_gesture_name``-metode i
-legacy-monolitten (norma-archive/Norma_Output.py:152-157).
+legacy-monolitten (legacy-monolith).
 """
 
 from __future__ import print_function, unicode_literals
 
-from norma_bridge.robot.gestures import (
+from pepper_bridge.robot.gestures import (
     DEFAULT_GESTURES,
     cycle_gesture,
 )

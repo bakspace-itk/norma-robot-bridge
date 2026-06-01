@@ -1,6 +1,6 @@
 @echo off
 REM ===================================================================
-REM  setup-windows.bat - opsaet norma-robot-bridge paa Windows (cmd)
+REM  setup-windows.bat - opsaet pepper-robot-bridge paa Windows (cmd)
 REM
 REM  Forudsaetninger (kan ikke automatiseres - laes scripts\README.md):
 REM    1. Python 2.7 + pip + virtualenv installeret
@@ -96,9 +96,23 @@ if errorlevel 1 (
 echo.
 
 REM ---------- venv ----------
-if exist ".venv27\Scripts\python.exe" (
-    echo [4/6] .venv27 eksisterer allerede - genbruger.
+REM Venv'er har hardcoded stier; hvis bridge-mappen er omdoebt siden venv'et
+REM blev oprettet, peger activate.bat paa en ikke-eksisterende sti og PATH-fix'et
+REM falder igennem til system-Python. Tjek det og regenerer hvis stale.
+set NEEDS_VENV=0
+if exist ".venv27\Scripts\activate.bat" (
+    findstr /i /c:"VIRTUAL_ENV=\"%CD%\.venv27\"" ".venv27\Scripts\activate.bat" >nul 2>&1
+    if errorlevel 1 (
+        echo [4/6] .venv27 peger paa en anden mappe ^(sandsynligvis efter mappe-rename^) - regenererer...
+        rmdir /s /q .venv27
+        set NEEDS_VENV=1
+    ) else (
+        echo [4/6] .venv27 eksisterer allerede - genbruger.
+    )
 ) else (
+    set NEEDS_VENV=1
+)
+if "%NEEDS_VENV%"=="1" (
     echo [4/6] Opretter .venv27...
     "%PYTHON2_EXE%" -m virtualenv .venv27
     if errorlevel 1 (
@@ -135,7 +149,7 @@ echo [6/6] Genererer %HELPER% ...
     echo REM Brug:  call activate-with-naoqi.bat
     echo call "%%~dp0.venv27\Scripts\activate.bat"
     echo set PYTHONPATH=%NAOQI_SITE%;%%CD%%\src
-    echo echo norma-bridge venv + NAOqi klar ^(PYTHONPATH inkluderer pynaoqi^).
+    echo echo pepper-bridge venv + NAOqi klar ^(PYTHONPATH inkluderer pynaoqi^).
 ) > "%HELPER%"
 echo        OK
 echo.
@@ -164,7 +178,7 @@ echo.
 echo     1. copy config\default.ini config\local.ini
 echo     2. Rediger config\local.ini og saet [robot] ip = ^<din-robots-IP^>
 echo     3. activate-with-naoqi.bat
-echo     4. python -m norma_bridge.main --config config\local.ini
+echo     4. python -m pepper_bridge.main --config config\local.ini
 echo.
 echo   Smoketest mod fysisk robot: tests\manual.md
 echo ====================================================================
@@ -174,7 +188,7 @@ endlocal
 exit /b 0
 
 :usage
-echo setup-windows.bat - opsaet norma-robot-bridge paa Windows
+echo setup-windows.bat - opsaet pepper-robot-bridge paa Windows
 echo.
 echo Brug:
 echo   scripts\setup-windows.bat NAOQI_SDK [PYTHON2_EXE [PYTHONHOME_PATH]]

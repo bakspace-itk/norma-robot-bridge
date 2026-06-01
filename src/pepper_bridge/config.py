@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Konfiguration for norma-bridge.
+"""Konfiguration for pepper-bridge.
 
 Precedence (lavest til hojest):
     1. Defaults i koden
@@ -25,19 +25,19 @@ except ImportError:
     # Py 2.7
     from ConfigParser import ConfigParser, NoSectionError, NoOptionError
 
-from norma_bridge.robot.gestures import DEFAULT_GESTURES
-from norma_bridge.robot.intro import IntroConfig
+from pepper_bridge.robot.gestures import DEFAULT_GESTURES
+from pepper_bridge.robot.intro import IntroConfig
 
 
 _log = logging.getLogger(__name__)
 
 
 # ENV-variabel-navne. Aendringer her skal afspejles i config/default.ini-kommentarer.
-ENV_ROBOT_IP = "NORMA_ROBOT_IP"
-ENV_ROBOT_PORT = "NORMA_ROBOT_PORT"
-ENV_BRIDGE_HOST = "NORMA_BRIDGE_HOST"
-ENV_BRIDGE_PORT = "NORMA_BRIDGE_PORT"
-ENV_LOG_LEVEL = "NORMA_LOG_LEVEL"
+ENV_ROBOT_IP = "PEPPER_ROBOT_IP"
+ENV_ROBOT_PORT = "PEPPER_ROBOT_PORT"
+ENV_BRIDGE_HOST = "PEPPER_BRIDGE_HOST"
+ENV_BRIDGE_PORT = "PEPPER_BRIDGE_PORT"
+ENV_LOG_LEVEL = "PEPPER_LOG_LEVEL"
 
 
 class BridgeConfig(object):
@@ -111,7 +111,7 @@ def find_default_ini():
       3. ``None`` hvis ingen findes (saa bruges kode-defaults + ENV alene)
 
     Repo-roden bestemmes ud fra denne fils placering
-    (``src/norma_bridge/config.py`` -> to mapper op).
+    (``src/pepper_bridge/config.py`` -> to mapper op).
     """
     package_dir = os.path.dirname(os.path.abspath(__file__))
     repo_root = os.path.dirname(os.path.dirname(package_dir))

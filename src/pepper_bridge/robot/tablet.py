@@ -2,14 +2,8 @@
 """HTML- og data-URI-helpers til ALTabletService.showWebview().
 
 Peppers tablet kan ikke loade en lokal fil direkte; HTML og billeder skal
-sendes som en ``data:text/html;base64`` URI. Denne fil samler den konvertering
-der i den oprindelige monolit blev duplikeret tre steder:
-
-- intro-flow (``_legacy.py:_startup_intro``, linjer 127-141)
-- ``show_tablet_image`` (linjer 195-210)
-- ``show_tablet_html`` (linjer 212-226)
-
-Helperne er rene funktioner uden NAOqi-afhaengighed - de kan testes uden robot.
+sendes som en ``data:text/html;base64`` URI. Helperne er rene funktioner
+uden NAOqi-afhaengighed - de kan testes uden robot.
 """
 
 from __future__ import print_function, unicode_literals

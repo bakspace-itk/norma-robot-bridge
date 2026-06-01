@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-"""FakeRobotService - in-memory implementering af NormaRobotService.
+"""FakeRobotService - in-memory implementering af PepperRobotService.
 
-Bruges til:
-  - Unit-tests af command-handlers og dispatcher uden NAOqi/robot
-  - dev-up.ps1 --fake mode (lokal HTTP-server uden robot-afhaengighed)
-  - Kontrakttests der verificerer API-skemaet
+Bruges til unit-tests, kontrakttests og lokal HTTP-server-koersel uden
+NAOqi/robot (``pepper-bridge --fake``).
 
-Skal matche return-vaerdier 1:1 med den rigtige NormaRobotService. Hvis du
+Skal matche return-vaerdier 1:1 med den rigtige PepperRobotService. Hvis du
 aendrer kontrakten paa den ene, skal du aendre den paa den anden i samme commit.
 """
 
@@ -15,11 +13,11 @@ from __future__ import print_function, unicode_literals
 import os
 import threading
 
-from norma_bridge.robot.gestures import DEFAULT_GESTURES, cycle_gesture
+from pepper_bridge.robot.gestures import DEFAULT_GESTURES, cycle_gesture
 
 
 class FakeRobotService(object):
-    """In-memory fake der overholder NormaRobotService's offentlige API.
+    """In-memory fake der overholder PepperRobotService's offentlige API.
 
     Hver kommando appender en post til ``self.history`` saa tests kan asserte
     paa rakkefoelgen og argumenterne. Returnerer dicts med samme noegler som

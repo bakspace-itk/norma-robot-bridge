@@ -1,0 +1,5 @@
+# PEP 517 build-system shim. Metadata lever stadig i setup.py fordi
+# Py 2.7-installation kraever den klassiske setuptools-vej.
+[build-system]
+requires = ["setuptools>=44.0", "wheel"]
+build-backend = "setuptools.build_meta"

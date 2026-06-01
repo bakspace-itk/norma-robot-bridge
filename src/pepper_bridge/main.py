@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
-"""Entry point for norma-bridge.
+"""Entry point for pepper-bridge.
 
 Eksempler:
     # Mod fysisk robot - auto-loader config/local.ini hvis den findes
-    python -m norma_bridge.main
+    python -m pepper_bridge.main
 
     # Mod fysisk robot med eksplicit IP (overstyrer config og ENV)
-    python -m norma_bridge.main --robot-ip 192.168.1.42
+    python -m pepper_bridge.main --robot-ip 192.168.1.42
 
     # Mod fysisk robot med eksplicit config-fil
-    python -m norma_bridge.main --config config/local.ini
+    python -m pepper_bridge.main --config config/local.ini
 
     # Lokal udvikling uden NAOqi (FakeRobotService)
-    python -m norma_bridge.main --fake --port 8080
+    python -m pepper_bridge.main --fake --port 8080
 
     # Kombination: fake-mode med specifik intro-test
-    python -m norma_bridge.main --fake --no-intro
+    python -m pepper_bridge.main --fake --no-intro
 """
 
 from __future__ import print_function, unicode_literals
@@ -24,11 +24,11 @@ import argparse
 import logging
 import sys
 
-from norma_bridge.config import load_config, find_default_ini
-from norma_bridge.api.handlers import make_handler
-from norma_bridge.api.server import serve
-from norma_bridge.robot.intro import run_intro
-from norma_bridge.robot.fakes import FakeRobotService
+from pepper_bridge.config import load_config, find_default_ini
+from pepper_bridge.api.handlers import make_handler
+from pepper_bridge.api.server import serve
+from pepper_bridge.robot.intro import run_intro
+from pepper_bridge.robot.fakes import FakeRobotService
 
 
 _log = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ _log = logging.getLogger(__name__)
 
 def parse_args(argv=None):
     p = argparse.ArgumentParser(
-        prog="norma-bridge",
+        prog="pepper-bridge",
         description="HTTP-bridge der eksponerer NAOqi for Pepper/NAO.",
     )
     p.add_argument(
@@ -44,19 +44,19 @@ def parse_args(argv=None):
         help="Sti til INI config-fil. Hvis udeladt: defaults + miljovariabler.",
     )
     p.add_argument(
-        "--host", help="Bind-host. Overstyrer config og NORMA_BRIDGE_HOST.",
+        "--host", help="Bind-host. Overstyrer config og PEPPER_BRIDGE_HOST.",
     )
     p.add_argument(
         "--port", type=int,
-        help="Bind-port. Overstyrer config og NORMA_BRIDGE_PORT.",
+        help="Bind-port. Overstyrer config og PEPPER_BRIDGE_PORT.",
     )
     p.add_argument(
         "--robot-ip", metavar="IP",
-        help="IP-adresse til Pepper/NAO. Overstyrer config og NORMA_ROBOT_IP.",
+        help="IP-adresse til Pepper/NAO. Overstyrer config og PEPPER_ROBOT_IP.",
     )
     p.add_argument(
         "--robot-port", type=int, metavar="PORT",
-        help="NAOqi-port. Overstyrer config og NORMA_ROBOT_PORT.",
+        help="NAOqi-port. Overstyrer config og PEPPER_ROBOT_PORT.",
     )
     p.add_argument(
         "--fake", action="store_true",
@@ -68,7 +68,7 @@ def parse_args(argv=None):
     )
     p.add_argument(
         "--log-level", metavar="LEVEL",
-        help="DEBUG/INFO/WARNING/ERROR. Overstyrer config og NORMA_LOG_LEVEL.",
+        help="DEBUG/INFO/WARNING/ERROR. Overstyrer config og PEPPER_LOG_LEVEL.",
     )
     return p.parse_args(argv)
 
@@ -86,7 +86,7 @@ def setup_logging(level):
 def build_service(cfg, use_fake):
     """Konstruer enten en rigtig eller fake service afhaengigt af flag.
 
-    NormaRobotService importeres lazy saa --fake-mode kan koere paa Py 3
+    PepperRobotService importeres lazy saa --fake-mode kan koere paa Py 3
     uden at NAOqi er installeret.
     """
     if use_fake:
@@ -100,12 +100,12 @@ def build_service(cfg, use_fake):
         raise SystemExit(
             "Robot-IP mangler. Angiv en af foelgende:\n"
             "  --robot-ip <IP>                  (CLI)\n"
-            "  NORMA_ROBOT_IP=<IP>              (miljovariabel)\n"
+            "  PEPPER_ROBOT_IP=<IP>              (miljovariabel)\n"
             "  [robot] ip = <IP> i en INI-fil   (--config eller config/local.ini)"
         )
-    from norma_bridge.robot.service import NormaRobotService
+    from pepper_bridge.robot.service import PepperRobotService
     _log.info("Forbinder til NAOqi paa %s:%d", cfg.robot_ip, cfg.robot_port)
-    return NormaRobotService(
+    return PepperRobotService(
         cfg.robot_ip, cfg.robot_port, gestures=cfg.gestures,
     )
 
@@ -135,7 +135,7 @@ def main(argv=None):
         _log.info("Auto-loadede config-fil: %s", ini_path)
     else:
         _log.info("Indlaest config-fil: %s", ini_path)
-    _log.info("Norma bridge starter: %s", cfg)
+    _log.info("Pepper bridge starter: %s", cfg)
 
     service = build_service(cfg, args.fake)
 

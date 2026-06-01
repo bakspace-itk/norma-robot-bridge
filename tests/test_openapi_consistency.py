@@ -26,8 +26,8 @@ import pytest
 yaml = pytest.importorskip("yaml")
 
 # Tving registrering af alle kommandoer
-import norma_bridge.api.commands  # noqa: F401
-from norma_bridge.api.dispatcher import registry
+import pepper_bridge.api.commands  # noqa: F401
+from pepper_bridge.api.dispatcher import registry
 
 
 SPEC_PATH = os.path.join(

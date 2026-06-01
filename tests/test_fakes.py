@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tests for FakeRobotService - sikrer at fake'en overholder kontrakten
-som NormaRobotService eksponerer over for command-handlers og dispatcher.
+som PepperRobotService eksponerer over for command-handlers og dispatcher.
 """
 
 from __future__ import print_function, unicode_literals
@@ -10,16 +10,16 @@ import tempfile
 
 import pytest
 
-from norma_bridge.robot.fakes import FakeRobotService, DEFAULT_GESTURES
+from pepper_bridge.robot.fakes import FakeRobotService, DEFAULT_GESTURES
 
 
 # -------- say --------
 
 def test_say_returnerer_kontrakt_dict():
     svc = FakeRobotService()
-    result = svc.say("Hej Norma")
+    result = svc.say("Hello world")
     assert set(result.keys()) == {"spoken_text", "gesture", "interaction_count"}
-    assert result["spoken_text"] == "Hej Norma"
+    assert result["spoken_text"] == "Hello world"
     assert result["interaction_count"] == 1
 
 
@@ -223,5 +223,5 @@ def test_say_under_concurrent_kald_giver_konsistent_taeller():
 # -------- default-gesture-listen --------
 
 def test_default_gesture_liste_har_10_elementer():
-    """Matcher antallet i legacy-koden (norma-archive/Norma_Output.py:42-53)."""
+    """Matcher antallet i legacy-koden (legacy-monolith)."""
     assert len(DEFAULT_GESTURES) == 10

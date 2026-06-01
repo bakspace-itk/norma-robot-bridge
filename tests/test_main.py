@@ -9,9 +9,9 @@ from __future__ import print_function, unicode_literals
 
 import pytest
 
-from norma_bridge.config import BridgeConfig
-from norma_bridge.main import build_service, parse_args
-from norma_bridge.robot.fakes import FakeRobotService
+from pepper_bridge.config import BridgeConfig
+from pepper_bridge.main import build_service, parse_args
+from pepper_bridge.robot.fakes import FakeRobotService
 
 
 # -------- parse_args: nye --robot-ip / --robot-port flags --------
@@ -41,7 +41,7 @@ def test_build_service_fejler_hurtigt_uden_ip_i_real_mode():
         build_service(cfg, use_fake=False)
     assert "Robot-IP mangler" in str(exc_info.value)
     assert "--robot-ip" in str(exc_info.value)
-    assert "NORMA_ROBOT_IP" in str(exc_info.value)
+    assert "PEPPER_ROBOT_IP" in str(exc_info.value)
 
 
 def test_build_service_fake_mode_tolererer_manglende_ip():

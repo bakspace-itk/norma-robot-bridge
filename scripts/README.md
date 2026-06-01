@@ -1,4 +1,4 @@
-# Setup-scripts for norma-robot-bridge
+# Setup-scripts for pepper-robot-bridge
 
 Automatiserer venv-opsætning på en frisk maskine. Et script per platform.
 
@@ -18,7 +18,7 @@ Scripts'ene er idempotente — kør dem så mange gange du vil. De ødelægger i
 ### 1. Installer Python 2.7
 
 **Linux:**
-Denne fremgangsmåde er teste på en frisk Linux Mint. Vi skal bruge både 2.7 og 3+, så pyenv er at foretrække.
+Denne fremgangsmåde er testet på en frisk Linux Mint. Vi skal bruge både 2.7 og 3+, så pyenv er at foretrække.
 ```bash
 sudo apt install build-essential libssl-dev zlib1g-dev \
 libbz2-dev libreadline-dev libsqlite3-dev curl \
@@ -103,7 +103,7 @@ Sørg for, at du har tilladelse til at køre scriptet med 'chmod +x setup-linux.
 ### Linux bash
 
 ```bash
-cd norma-robot-bridge
+cd pepper-robot-bridge
 ./scripts/setup-linux.sh --naoqi-sdk /opt/aldebaran/pynaoqi-python2.7-2.5.5.5-linux64
 ```
 
@@ -117,7 +117,7 @@ Hvis Python 2.7 hedder noget andet end `python2`:
 ### Windows cmd — standard Python 2.7 + separat pynaoqi-SDK
 
 ```cmd
-cd norma-robot-bridge
+cd pepper-robot-bridge
 scripts\setup-windows.bat C:\tools\pynaoqi
 ```
 
@@ -166,7 +166,7 @@ copy config\default.ini config\local.ini
 notepad config\local.ini
 ```
 
-Sæt `[robot] ip = <din-robots-IP>`. Tryk på Norma's maveknap for at høre IP'en højt. `config/local.ini` er gitignored.
+Sæt `[robot] ip = <din-robots-IP>`. Tryk på robottens maveknap for at høre IP'en højt. `config/local.ini` er gitignored.
 
 ### 2. Aktivér miljøet
 
@@ -186,12 +186,12 @@ activate-with-naoqi.bat
 
 Mod fysisk robot:
 ```bash
-python -m norma_bridge.main --config config/local.ini
+python -m pepper_bridge.main --config config/local.ini
 ```
 
 Eller i fake-mode (uden NAOqi/robot — til lokal udvikling):
 ```bash
-python -m norma_bridge.main --fake --no-intro
+python -m pepper_bridge.main --fake --no-intro
 ```
 
 ### 4. Smoketest
@@ -224,7 +224,7 @@ Hvis du flytter SDK eller skifter venv: kør setup-scriptet igen. Det overskrive
 ## Hvad scriptet IKKE gør
 
 - Installerer **ikke** Python 2.7 (kræver root/admin på de fleste systemer)
-- Installerer **ikke** pip eller får-pip.py (samme grund)
+- Installerer **ikke** pip (samme grund)
 - Henter **ikke** NAOqi-SDK (kræver Aldebaran-login)
 - Konfigurerer **ikke** robot-IP (skal vælges per setup)
 - Tester **ikke** mod fysisk robot (det er `tests/manual.md`-jobbet)

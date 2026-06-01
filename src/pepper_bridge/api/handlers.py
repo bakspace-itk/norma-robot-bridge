@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 """HTTP request handler bygget som factory.
 
-Refaktoreret fra ``_legacy.py:ApiHandler`` (linjer 239-319). Aendringer:
+``make_handler(service)`` returnerer en ``BaseHTTPRequestHandler``-subklasse
+bundet til en konkret service. Dispatch-logikken ligger i
+``api/dispatcher.py`` + ``api/commands.py``.
 
-- ``service`` er nu bundet til handler-klassen via en factory (``make_handler``)
-  i stedet for at vaere en modul-global klassevariabel.
-- Dispatch-logikken er flyttet til ``api/dispatcher.py`` + ``api/commands.py``.
-- Klare 400 vs 500 fejl-koder:
-    - ``ValueError`` (ukendt kommando, manglende parametre) -> 400
-    - ``IOError``/``OSError`` (klient-angivet sti findes ikke) -> 400
-    - Alt andet (NAOqi-fejl, intern bug) -> 500
-- Routing er eksplicit pr. (metode, sti) - ukendte ruter giver 404, ikke 500.
-- Logning gennem stdlib ``logging`` i stedet for ``print``.
+Fejl-koder:
+- ``ValueError`` (ukendt kommando, manglende parametre) -> 400
+- ``IOError``/``OSError`` (klient-angivet sti findes ikke) -> 400
+- Alt andet (NAOqi-fejl, intern bug) -> 500
+- Ukendte ruter -> 404
 """
 
 from __future__ import print_function, unicode_literals
@@ -26,8 +24,8 @@ except ImportError:
     # Python 3
     from http.server import BaseHTTPRequestHandler
 
-from norma_bridge.api.dispatcher import registry
-import norma_bridge.api.commands  # noqa: F401 - import for at registrere handlers
+from pepper_bridge.api.dispatcher import registry
+import pepper_bridge.api.commands  # noqa: F401 - import for at registrere handlers
 
 
 _log = logging.getLogger(__name__)
@@ -41,7 +39,7 @@ def make_handler(service):
     i samme proces hvis det skulle behoeves.
 
     Argumenter:
-        service: en ``NormaRobotService`` eller ``FakeRobotService``.
+        service: en ``PepperRobotService`` eller ``FakeRobotService``.
 
     Returnerer:
         En klasse der kan bruges som ``HTTPServer(server_address, klassen)``.

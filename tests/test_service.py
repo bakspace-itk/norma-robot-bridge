@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests for NormaRobotService med mocked NAOqi.
+"""Tests for PepperRobotService med mocked NAOqi.
 
 Verificerer at den rigtige service-klasse:
 
@@ -41,9 +41,9 @@ def proxies():
 
 @pytest.fixture
 def service(proxies):
-    """Konstruer en NormaRobotService med mockede ALProxy-konstruktioner.
+    """Konstruer en PepperRobotService med mockede ALProxy-konstruktioner.
 
-    Vi patcher modul-globalen ``norma_bridge.robot.service.ALProxy`` saa
+    Vi patcher modul-globalen ``pepper_bridge.robot.service.ALProxy`` saa
     constructorens kald af ``ALProxy(name, ip, port)`` returnerer vores mocks.
     """
     tts, anim, tab = proxies
@@ -58,22 +58,22 @@ def service(proxies):
             "ALTabletService": tab,
         }[key]
 
-    with patch("norma_bridge.robot.service.ALProxy", side_effect=fake_proxy):
-        from norma_bridge.robot.service import NormaRobotService
-        svc = NormaRobotService("10.0.0.1", 9559, gestures=("a", "b", "c"))
+    with patch("pepper_bridge.robot.service.ALProxy", side_effect=fake_proxy):
+        from pepper_bridge.robot.service import PepperRobotService
+        svc = PepperRobotService("10.0.0.1", 9559, gestures=("a", "b", "c"))
         yield svc
 
 
 # -------- _to_naoqi_str --------
 
 def test_to_naoqi_str_encoder_unicode_til_utf8_bytes():
-    from norma_bridge.robot.service import _to_naoqi_str
+    from pepper_bridge.robot.service import _to_naoqi_str
     assert _to_naoqi_str("ALTextToSpeech") == b"ALTextToSpeech"
     assert _to_naoqi_str(u"æøå") == b"\xc3\xa6\xc3\xb8\xc3\xa5"
 
 
 def test_to_naoqi_str_lader_bytes_vaere():
-    from norma_bridge.robot.service import _to_naoqi_str
+    from pepper_bridge.robot.service import _to_naoqi_str
     assert _to_naoqi_str(b"already-bytes") == b"already-bytes"
 
 
@@ -81,10 +81,10 @@ def test_to_naoqi_str_lader_bytes_vaere():
 
 def test_init_kaster_runtime_error_naar_naoqi_mangler():
     """Hvis ALProxy er None (NAOqi ikke importerbar) skal init fejle eksplicit."""
-    with patch("norma_bridge.robot.service.ALProxy", None):
-        from norma_bridge.robot.service import NormaRobotService
+    with patch("pepper_bridge.robot.service.ALProxy", None):
+        from pepper_bridge.robot.service import PepperRobotService
         with pytest.raises(RuntimeError) as exc_info:
-            NormaRobotService("10.0.0.1", 9559)
+            PepperRobotService("10.0.0.1", 9559)
         assert "NAOqi" in str(exc_info.value)
 
 
@@ -96,18 +96,20 @@ def test_init_opretter_tre_alproxy_instanser_med_korrekt_ip_og_port(proxies):
         key = name.decode("utf-8") if isinstance(name, bytes) else name
         return {"ALTextToSpeech": tts, "ALAnimationPlayer": anim, "ALTabletService": tab}[key]
 
-    with patch("norma_bridge.robot.service.ALProxy", side_effect=fake_proxy) as mock_proxy:
-        from norma_bridge.robot.service import NormaRobotService
-        NormaRobotService("10.0.0.1", 9559)
+    with patch("pepper_bridge.robot.service.ALProxy", side_effect=fake_proxy) as mock_proxy:
+        from pepper_bridge.robot.service import PepperRobotService
+        PepperRobotService("10.0.0.1", 9559)
 
     # NAOqi's SWIG-binding kraever bytes for char*-argumenter; service encoder
-    # baade modul-navn og IP til UTF-8.
+    # baade modul-navn og IP til UTF-8. Raekkefoelgen er ikke garanteret paa
+    # Py 2.7 (uordnede dicts), brug any_order=True.
     expected = [
         call(b"ALTextToSpeech", b"10.0.0.1", 9559),
         call(b"ALAnimationPlayer", b"10.0.0.1", 9559),
         call(b"ALTabletService", b"10.0.0.1", 9559),
     ]
-    assert mock_proxy.call_args_list == expected
+    assert mock_proxy.call_count == 3
+    mock_proxy.assert_has_calls(expected, any_order=True)
 
 
 def test_init_kalder_ikke_intro_eller_anden_robot_handling(proxies, service):
@@ -277,7 +279,7 @@ def test_show_tablet_url_kalder_showwebview_direkte(proxies, service):
     URL'en encodes dog til bytes ved NAOqi-graensefladen.
     """
     _, _, tab = proxies
-    url = "http://norma-ui.local:8000/dialog"
+    url = "http://ui.example.local:8000/dialog"
     result = service.show_tablet_url(url)
     tab.showWebview.assert_called_once_with(url.encode("utf-8"))
     assert result == {"shown_url": url}

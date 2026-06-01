@@ -1,4 +1,4 @@
-# Runtime-deps for norma-robot-bridge (Python 2.7).
+# Runtime-deps for pepper-robot-bridge (Python 2.7).
 #
 # NAOqi SDK leveres ikke via pip - installeres separat paa den maskine der har
 # adgang til Pepper/NAO. Verificer med:

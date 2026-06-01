@@ -23,9 +23,9 @@ try:
 except ImportError:  # Py 2
     from urllib2 import Request, urlopen, HTTPError
 
-from norma_bridge.api.handlers import make_handler
-from norma_bridge.api.server import ThreadedHTTPServer
-from norma_bridge.robot.fakes import FakeRobotService
+from pepper_bridge.api.handlers import make_handler
+from pepper_bridge.api.server import ThreadedHTTPServer
+from pepper_bridge.robot.fakes import FakeRobotService
 
 
 # -------- HTTP-helpers -------- #
@@ -111,11 +111,11 @@ def test_post_say_returnerer_succes(server):
     base, svc = server
     code, body = _http(
         "POST", base + "/api/command",
-        {"command": "say", "params": {"text": "Hej Norma"}},
+        {"command": "say", "params": {"text": "Hello world"}},
     )
     assert code == 200
     assert body["status"] == "success"
-    assert body["data"]["spoken_text"] == "Hej Norma"
+    assert body["data"]["spoken_text"] == "Hello world"
 
 
 def test_post_med_unicode_haandterer_aeoeaa(server):

@@ -9,7 +9,7 @@ from __future__ import print_function, unicode_literals
 
 import pytest
 
-from norma_bridge.api.dispatcher import CommandRegistry
+from pepper_bridge.api.dispatcher import CommandRegistry
 
 
 # -------- register --------

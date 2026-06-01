@@ -12,8 +12,8 @@ import tempfile
 
 import pytest
 
-from norma_bridge.robot.fakes import FakeRobotService
-from norma_bridge.robot.intro import IntroConfig, run_intro
+from pepper_bridge.robot.fakes import FakeRobotService
+from pepper_bridge.robot.intro import IntroConfig, run_intro
 
 
 # -------- IntroConfig --------
@@ -29,12 +29,12 @@ def test_intro_config_alle_felter_default_til_none():
 def test_intro_config_fra_dict_laeser_alle_felter():
     cfg = IntroConfig.from_dict({
         "animation_tag": "cloud",
-        "image_url": "http://norma-ui.local/intro",
+        "image_url": "http://ui.example.local/intro",
         "image_path": "/tmp/intro.png",
         "welcome_text": "Hej",
     })
     assert cfg.animation_tag == "cloud"
-    assert cfg.image_url == "http://norma-ui.local/intro"
+    assert cfg.image_url == "http://ui.example.local/intro"
     assert cfg.image_path == "/tmp/intro.png"
     assert cfg.welcome_text == "Hej"
 
@@ -77,12 +77,12 @@ def test_run_intro_kun_animation():
 
 def test_run_intro_kun_velkomst():
     svc = FakeRobotService()
-    results = run_intro(svc, IntroConfig(welcome_text="Hej Norma"))
+    results = run_intro(svc, IntroConfig(welcome_text="Hello world"))
     assert results == [("welcome", "ok")]
     # say tracker text + interaction_count + cycled gesture
     assert len(svc.history) == 1
     assert svc.history[0]["op"] == "say"
-    assert svc.history[0]["text"] == "Hej Norma"
+    assert svc.history[0]["text"] == "Hello world"
 
 
 def test_run_intro_kun_image_url():
@@ -134,8 +134,8 @@ def test_run_intro_fuld_sekvens_i_korrekt_raekkefoelge():
     svc = FakeRobotService()
     cfg = IntroConfig(
         animation_tag="cloud",
-        image_url="http://norma-ui.local/intro",
-        welcome_text="Jeg hedder Norma",
+        image_url="http://ui.example.local/intro",
+        welcome_text="Hello world",
     )
     results = run_intro(svc, cfg)
     assert results == [
